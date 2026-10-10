@@ -24,6 +24,8 @@ body {
     overflow-x: hidden;
 }
 
+.hidden { display: none !important; }
+
 .app {
     max-width: 1400px;
     margin: 0 auto;
@@ -44,6 +46,7 @@ body {
     margin-bottom: 14px;
     flex-wrap: wrap;
     gap: 12px;
+    position: relative;
 }
 
 .brand { display: flex; align-items: center; gap: 14px; }
@@ -61,9 +64,9 @@ body {
 .brand-text h1 { font-size: 18px; color: var(--text); }
 .brand-text span { font-size: 12px; color: var(--text3); }
 
-.controls { display: flex; gap: 8px; flex-wrap: wrap; }
+.controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
-.file-btn, .controls button {
+.file-btn, .controls button:not(.hamburger) {
     background: var(--accent);
     color: white;
     border: none;
@@ -77,11 +80,139 @@ body {
     user-select: none;
 }
 
-.file-btn:hover, .controls button:hover {
+.file-btn:hover, .controls button:not(.hamburger):hover {
     background: var(--glow);
     color: var(--bg);
 }
 
+/* ═══ HAMBURGER ═══ */
+.hamburger {
+    background: var(--elevated) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+    width: 42px;
+    height: 42px;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.hamburger:hover {
+    background: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
+
+.hamburger span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: var(--text);
+    border-radius: 2px;
+    transition: all 0.25s;
+}
+
+.hamburger.active span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.hamburger.active span:nth-child(2) { opacity: 0; }
+.hamburger.active span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+.hamburger:hover span { background: var(--bg); }
+
+/* ═══ MENU DROPDOWN ═══ */
+.menu-dropdown {
+    position: absolute;
+    top: 70px;
+    right: 20px;
+    width: 280px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    padding: 8px;
+    z-index: 100;
+    animation: dropIn 0.18s ease-out;
+}
+
+@keyframes dropIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.menu-header {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--text3);
+    letter-spacing: 1.5px;
+    padding: 8px 12px 6px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 6px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.menu-item:hover {
+    background: var(--elevated);
+}
+
+.menu-item:hover .menu-icon {
+    transform: scale(1.15);
+}
+
+.menu-icon {
+    font-size: 16px;
+    width: 22px;
+    text-align: center;
+    transition: transform 0.2s;
+    filter: grayscale(0.3);
+}
+
+.menu-item:hover .menu-icon {
+    filter: grayscale(0);
+}
+
+.menu-item span:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.menu-item strong {
+    color: var(--text);
+    font-weight: 500;
+    font-size: 13px;
+}
+
+.menu-item small {
+    color: var(--text3);
+    font-size: 10.5px;
+}
+
+.menu-sep {
+    height: 1px;
+    background: var(--border);
+    margin: 6px 8px;
+}
+
+/* ═══ STATUS BAR ═══ */
 .status-bar {
     display: flex;
     align-items: center;
@@ -108,6 +239,7 @@ body {
     50%      { opacity: 0.4; transform: scale(0.8); }
 }
 
+/* ═══ INPUT AREA ═══ */
 .input-area {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -145,20 +277,58 @@ body {
     font-family: 'Consolas', monospace;
 }
 
+/* ═══ FILTER BAR ═══ */
+.filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    animation: dropIn 0.2s ease-out;
+}
+
+#filter-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: var(--text);
+    font-family: 'Consolas', monospace;
+    font-size: 12px;
+    outline: none;
+}
+
+#filter-input:focus { border-color: var(--accent); }
+
+.filter-count {
+    font-size: 11px;
+    color: var(--glow);
+    font-family: 'Consolas', monospace;
+    white-space: nowrap;
+}
+
+/* ═══ GHOST BUTTON ═══ */
 .ghost {
     background: transparent !important;
     border: 1px solid var(--border) !important;
     color: var(--text2) !important;
     padding: 6px 14px !important;
     font-size: 11px !important;
+    cursor: pointer;
+    border-radius: 6px;
+    font-family: inherit;
 }
 
 .ghost:hover {
     border-color: var(--danger) !important;
     color: var(--danger) !important;
-    background: transparent !important;
 }
 
+/* ═══ LAYOUT ═══ */
 .content {
     display: grid;
     grid-template-columns: 200px 1fr;
@@ -203,6 +373,7 @@ body {
     color: var(--glow);
 }
 
+/* ═══ REPORT ═══ */
 .report {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -251,6 +422,8 @@ body {
 }
 
 .entry:hover { border-color: var(--accent); }
+.entry.hidden-by-filter { display: none; }
+.entry.hidden-by-important { display: none; }
 
 .entry .name {
     color: var(--gold);
@@ -341,18 +514,8 @@ body {
     margin-bottom: 10px;
 }
 
-.suggestion h4 {
-    color: var(--glow);
-    font-size: 14px;
-    margin-bottom: 8px;
-}
-
-.suggestion p {
-    font-size: 12px;
-    color: var(--text2);
-    line-height: 1.6;
-    margin-bottom: 6px;
-}
+.suggestion h4 { color: var(--glow); font-size: 14px; margin-bottom: 8px; }
+.suggestion p { font-size: 12px; color: var(--text2); line-height: 1.6; margin-bottom: 6px; }
 
 .suggestion code {
     background: var(--bg);
@@ -361,6 +524,91 @@ body {
     color: var(--gold);
     font-family: 'Consolas', monospace;
     font-size: 11px;
+}
+
+/* ═══ MODAL ═══ */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-box {
+    width: 100%;
+    max-width: 900px;
+    height: 80vh;
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.8);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--elevated);
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.modal-header h2 {
+    font-size: 15px;
+    color: var(--glow);
+    font-weight: 600;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.modal-close {
+    background: var(--danger);
+    border: none;
+    color: white;
+    font-size: 20px;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+}
+
+.modal-close:hover { background: #B91C1C; }
+
+#modal-content {
+    flex: 1;
+    overflow: auto;
+    padding: 20px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 12px;
+    line-height: 1.55;
+    white-space: pre;
+    tab-size: 4;
 }
 
 .footer {
@@ -383,4 +631,7 @@ body {
     .controls { width: 100%; }
     .controls button, .file-btn { flex: 1; text-align: center; }
     #dump-input { height: 140px; }
-    }
+    .menu-dropdown { width: calc(100vw - 40px); right: 12px; top: 78px; }
+    .modal-box { height: 90vh; }
+    #modal-content { padding: 14px; font-size: 11px; }
+}
