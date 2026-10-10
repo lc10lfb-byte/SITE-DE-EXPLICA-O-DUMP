@@ -3,152 +3,221 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LC10 — Análise Universal de Dump</title>
+<title>LC10 • Dump Studio</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="app">
-    <header class="header">
-        <div class="brand">
+
+    <!-- ═══════════ HEADER ═══════════ -->
+    <header class="topbar">
+        <div class="topbar-left">
             <div class="logo">LC10</div>
-            <div class="brand-text">
-                <h1>LC10 • Dump Analyzer</h1>
-                <span>Análise universal — por x.lusca1</span>
+            <div class="brand">
+                <h1>Dump Studio</h1>
+                <span>by x.lusca1</span>
             </div>
         </div>
-        <div class="controls">
-            <label for="file-input" class="file-btn">Carregar</label>
+        <div class="topbar-right">
+            <label for="file-input" class="btn ghost-btn" title="Carregar arquivo">
+                <span class="btn-icon">📁</span>
+                <span>Carregar</span>
+            </label>
             <input type="file" id="file-input" accept=".txt,.lua,.json" multiple hidden>
-            <button id="parse-btn">Analisar</button>
-            <button id="menu-btn" class="hamburger" title="Menu">
+            <button id="parse-btn" class="btn primary">
+                <span class="btn-icon">⚡</span>
+                <span>Analisar</span>
+            </button>
+            <button id="menu-btn" class="btn icon-btn hamburger" aria-label="Menu">
                 <span></span><span></span><span></span>
             </button>
         </div>
     </header>
 
-    <!-- dropdown do menu -->
-    <div id="menu-dropdown" class="menu-dropdown hidden">
-        <div class="menu-header">Ferramentas LC10</div>
+    <!-- ═══════════ MENU DROPDOWN ═══════════ -->
+    <div id="menu-dropdown" class="menu hidden">
+        <div class="menu-title">Ferramentas</div>
         <button class="menu-item" data-action="filter-toggle">
-            <span class="menu-icon">🔍</span>
-            <span>
+            <span class="mi-icon">🔍</span>
+            <div class="mi-text">
                 <strong>Filtrar resultados</strong>
                 <small>Busca em tempo real</small>
-            </span>
+            </div>
         </button>
         <button class="menu-item" data-action="important-toggle">
-            <span class="menu-icon">✨</span>
-            <span>
-                <strong>Modo só o importante</strong>
+            <span class="mi-icon">✨</span>
+            <div class="mi-text">
+                <strong>Modo foco</strong>
                 <small>Esconde remotes genéricos</small>
-            </span>
+            </div>
         </button>
         <div class="menu-sep"></div>
         <button class="menu-item" data-action="skeleton">
-            <span class="menu-icon">🧩</span>
-            <span>
+            <span class="mi-icon">🧩</span>
+            <div class="mi-text">
                 <strong>Gerar esqueleto</strong>
                 <small>Estrutura Lua dos hooks</small>
-            </span>
+            </div>
         </button>
         <button class="menu-item" data-action="sniffer">
-            <span class="menu-icon">📡</span>
-            <span>
+            <span class="mi-icon">📡</span>
+            <div class="mi-text">
                 <strong>Gerar sniffer</strong>
                 <small>Captura args em tempo real</small>
-            </span>
+            </div>
         </button>
-        <button class="menu-item" data-action="fullscript">
-            <span class="menu-icon">⚡</span>
-            <span>
+        <button class="menu-item highlight" data-action="fullscript">
+            <span class="mi-icon">⚡</span>
+            <div class="mi-text">
                 <strong>Gerar script completo</strong>
-                <small>Painel funcional adaptado</small>
-            </span>
+                <small>Painel + funções customizadas</small>
+            </div>
         </button>
         <div class="menu-sep"></div>
-        <button class="menu-item" data-action="export-txt">
-            <span class="menu-icon">📄</span>
-            <span><strong>Exportar .txt</strong></span>
-        </button>
-        <button class="menu-item" data-action="export-md">
-            <span class="menu-icon">📝</span>
-            <span><strong>Exportar .md</strong></span>
-        </button>
-        <button class="menu-item" data-action="export-json">
-            <span class="menu-icon">🗂️</span>
-            <span><strong>Exportar .json</strong></span>
-        </button>
+        <div class="menu-title">Exportar</div>
+        <div class="menu-grid">
+            <button class="menu-item compact" data-action="export-txt"><span class="mi-icon">📄</span> TXT</button>
+            <button class="menu-item compact" data-action="export-md"><span class="mi-icon">📝</span> MD</button>
+            <button class="menu-item compact" data-action="export-json"><span class="mi-icon">🗂️</span> JSON</button>
+        </div>
     </div>
 
-    <section class="status-bar">
-        <div class="pulse-dot"></div>
+    <!-- ═══════════ STATUS BAR ═══════════ -->
+    <div class="statusbar">
+        <div class="status-dot"></div>
         <span id="status-text">Cola o dump abaixo e clica em Analisar</span>
-    </section>
+    </div>
 
-    <section class="input-area">
-        <textarea id="dump-input" placeholder="Cola o dump aqui — qualquer jogo Roblox, qualquer formato.
+    <!-- ═══════════ INPUT AREA ═══════════ -->
+    <section class="input-card">
+        <div class="card-header">
+            <h2>Entrada do dump</h2>
+            <span class="card-hint">Qualquer jogo Roblox · qualquer formato</span>
+        </div>
+        <textarea id="dump-input" placeholder="Cola o dump aqui — source Lua, dump estruturado, output de sniffer, SaveInstance...
 
-• Source Lua bruto
-• Dump estruturado (RS/Nome, WS/Nome)
-• Output de sniffer / SaveInstance
-
-O analisador detecta padrões sozinho."></textarea>
-        <div class="input-info">
-            <span id="input-stats">0 caracteres · 0 linhas</span>
-            <button id="clear-btn" class="ghost">Limpar</button>
+O analisador detecta os padrões sozinho."></textarea>
+        <div class="input-footer">
+            <span id="input-stats" class="mono">0 chars · 0 linhas</span>
+            <button id="clear-btn" class="btn tiny">Limpar</button>
         </div>
     </section>
 
-    <!-- barra de filtro (escondida por padrão) -->
+    <!-- ═══════════ FILTER BAR ═══════════ -->
     <section id="filter-bar" class="filter-bar hidden">
-        <input type="text" id="filter-input" placeholder="Filtrar entradas por nome... (ex: attack, status, remote)" spellcheck="false">
-        <span id="filter-count" class="filter-count"></span>
-        <button id="filter-clear" class="ghost">×</button>
+        <span class="fb-icon">🔍</span>
+        <input type="text" id="filter-input" placeholder="Filtrar entradas por nome..." spellcheck="false">
+        <span id="filter-count" class="fb-count"></span>
+        <button id="filter-clear" class="fb-close">×</button>
     </section>
 
-    <main class="content">
+    <!-- ═══════════ CONTENT ═══════════ -->
+    <main class="layout">
         <aside class="sidebar">
-            <h3>Sumário</h3>
+            <div class="sidebar-title">Sumário</div>
             <ul id="summary-list">
-                <li data-target="jogo">Jogo</li>
-                <li data-target="remote-events">Remotes</li>
-                <li data-target="remote-functions">Functions</li>
-                <li data-target="bindable-events">Bindables</li>
-                <li data-target="module-scripts">Modules</li>
-                <li data-target="local-scripts">Local Scripts</li>
-                <li data-target="fireserver-fireclient-calls">Fire Calls</li>
-                <li data-target="mencoes-frequentes">Menções</li>
-                <li data-target="executor">Executor</li>
-                <li data-target="sugestoes">Sugestões</li>
+                <li data-target="jogo"><span>🎮</span> Jogo</li>
+                <li data-target="remote-events"><span>📡</span> Remotes</li>
+                <li data-target="remote-functions"><span>⚙️</span> Functions</li>
+                <li data-target="bindable-events"><span>🔗</span> Bindables</li>
+                <li data-target="module-scripts"><span>📦</span> Modules</li>
+                <li data-target="local-scripts"><span>📜</span> Locals</li>
+                <li data-target="fireserver-fireclient-calls"><span>🔥</span> Fire Calls</li>
+                <li data-target="mencoes-frequentes"><span>📊</span> Menções</li>
+                <li data-target="executor"><span>🛠️</span> Executor</li>
+                <li data-target="sugestoes"><span>💡</span> Sugestões</li>
             </ul>
         </aside>
 
         <section class="report" id="report">
             <div class="empty">
-                <p>Nenhum dump analisado ainda.</p>
-                <p class="hint">Cola o dump acima ou carrega um arquivo <strong>.txt</strong> / <strong>.lua</strong>.</p>
+                <div class="empty-icon">📋</div>
+                <h3>Nenhum dump analisado</h3>
+                <p>Cola um dump no campo acima e clica em <strong>Analisar</strong>.</p>
             </div>
         </section>
     </main>
 
     <footer class="footer">
-        LC10 • Dump Analyzer — by x.lusca1
+        LC10 • Dump Studio — by x.lusca1
     </footer>
+
 </div>
 
-<!-- MODAL -->
-<div id="modal" class="modal hidden">
+<!-- ═══════════ CONFIG MODAL (script completo) ═══════════ -->
+<div id="config-modal" class="modal hidden">
     <div class="modal-box">
-        <div class="modal-header">
-            <h2 id="modal-title">Saída</h2>
+        <div class="modal-head">
+            <div>
+                <h2 id="config-title">⚡ Gerar Script</h2>
+                <span class="modal-sub" id="config-sub">Configura o script que tu quer</span>
+            </div>
+            <button class="modal-close" onclick="document.getElementById('config-modal').classList.add('hidden')">×</button>
+        </div>
+
+        <div class="modal-body">
+
+            <label class="field-label">O que tu quer no script?</label>
+            <textarea id="prompt-input" class="field-textarea" placeholder="Digite as funções separadas por vírgula.
+
+Exemplo:
+painel gui, aimbot, esp, speed, jump, teleport, anti-detect"></textarea>
+
+            <div class="field-suggestions">
+                <span class="sug-label">Sugestões rápidas:</span>
+                <button class="sug-chip" data-sug="painel gui, esp, aimbot">🎯 FPS Pack</button>
+                <button class="sug-chip" data-sug="painel gui, speed, jump, fly, noclip">🏃 Movement Pack</button>
+                <button class="sug-chip" data-sug="painel gui, anti-detect, anti-state, godmode">🛡️ Stealth Pack</button>
+                <button class="sug-chip" data-sug="painel gui, esp, stats, fullbright">👁️ Visual Pack</button>
+            </div>
+
+            <label class="field-label">Suporte</label>
+            <div class="platform-picker">
+                <button class="platform-option" data-platform="mobile">
+                    <span class="plat-icon">📱</span>
+                    <div class="plat-text">
+                        <strong>Mobile</strong>
+                        <small>Touch · botões grandes · sem keybind</small>
+                    </div>
+                    <span class="plat-check">✓</span>
+                </button>
+                <button class="platform-option" data-platform="pc">
+                    <span class="plat-icon">🖥️</span>
+                    <div class="plat-text">
+                        <strong>PC</strong>
+                        <small>Mouse/teclado · hotkeys · compacto</small>
+                    </div>
+                    <span class="plat-check">✓</span>
+                </button>
+            </div>
+
+        </div>
+
+        <div class="modal-foot">
+            <button id="generate-btn" class="btn primary large">
+                <span class="btn-icon">⚡</span>
+                <span>Gerar Script</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ OUTPUT MODAL ═══════════ -->
+<div id="output-modal" class="modal hidden">
+    <div class="modal-box large">
+        <div class="modal-head">
+            <div>
+                <h2 id="output-title">Saída</h2>
+                <span class="modal-sub" id="output-sub"></span>
+            </div>
             <div class="modal-actions">
-                <button id="modal-copy" class="ghost">Copiar</button>
-                <button id="modal-download" class="ghost">Baixar</button>
-                <button id="modal-close" class="modal-close">×</button>
+                <button id="output-copy" class="btn tiny">Copiar</button>
+                <button id="output-download" class="btn tiny">Baixar</button>
+                <button class="modal-close" onclick="document.getElementById('output-modal').classList.add('hidden')">×</button>
             </div>
         </div>
-        <pre id="modal-content"></pre>
+        <pre id="output-content"></pre>
     </div>
 </div>
 
