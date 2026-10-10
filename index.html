@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LC10 • FTF — Análise de Dump</title>
+<title>LC10 — Análise Universal de Dump</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,13 +13,13 @@
         <div class="brand">
             <div class="logo">LC10</div>
             <div class="brand-text">
-                <h1>LC10 • FTF</h1>
-                <span>Análise de Dump — por x.lusca1</span>
+                <h1>LC10 • Dump Analyzer</h1>
+                <span>Análise universal de dumps Roblox — por x.lusca1</span>
             </div>
         </div>
         <div class="controls">
             <label for="file-input" class="file-btn">Carregar .txt</label>
-            <input type="file" id="file-input" accept=".txt,.lua" multiple hidden>
+            <input type="file" id="file-input" accept=".txt,.lua,.json" multiple hidden>
             <button id="parse-btn">Analisar</button>
         </div>
     </header>
@@ -30,15 +30,13 @@
     </section>
 
     <section class="input-area">
-        <textarea id="dump-input" placeholder="Cola o dump do FtF aqui...
+        <textarea id="dump-input" placeholder="Cola o dump aqui — pode ser:
 
-Formato esperado:
+• Source Lua bruto de qualquer jogo Roblox
+• Dump estruturado (RS/Nome, WS/Nome, headers)
+• Output de sniffer / SaveInstance / executor dump
 
-═══ REMOTE EVENTS (13) ═══
-RS/HammerEvent
-WS/HammerEvent
-WS/PowersEvent
-...
+Formato não importa. O analisador detecta padrões sozinho.
 "></textarea>
         <div class="input-info">
             <span id="input-stats">0 caracteres · 0 linhas</span>
@@ -50,12 +48,14 @@ WS/PowersEvent
         <aside class="sidebar">
             <h3>Sumário</h3>
             <ul id="summary-list">
+                <li data-target="jogo">Jogo</li>
                 <li data-target="remote-events">Remotes</li>
                 <li data-target="remote-functions">Functions</li>
                 <li data-target="bindable-events">Bindables</li>
-                <li data-target="local-scripts">Local Scripts</li>
                 <li data-target="module-scripts">Modules</li>
-                <li data-target="constantes">Constantes</li>
+                <li data-target="local-scripts">Local Scripts</li>
+                <li data-target="fire-calls">FireServer / FireClient</li>
+                <li data-target="mencoes">Menções frequentes</li>
                 <li data-target="executor">Executor</li>
                 <li data-target="sugestoes">Sugestões</li>
             </ul>
@@ -64,13 +64,13 @@ WS/PowersEvent
         <section class="report" id="report">
             <div class="empty">
                 <p>Nenhum dump analisado ainda.</p>
-                <p class="hint">Cola o dump no campo acima ou carrega um arquivo <strong>.txt</strong>.</p>
+                <p class="hint">Cola o dump no campo acima ou carrega um arquivo <strong>.txt</strong> / <strong>.lua</strong>.</p>
             </div>
         </section>
     </main>
 
     <footer class="footer">
-        LC10 • FTF — by x.lusca1
+        LC10 • Dump Analyzer — by x.lusca1
     </footer>
 </div>
 
