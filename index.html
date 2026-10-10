@@ -18,36 +18,53 @@
             </div>
         </div>
         <div class="controls">
-            <input type="text" id="repo-input" placeholder="usuario/repo" spellcheck="false">
-            <input type="text" id="path-input" placeholder="dumps" value="dumps" spellcheck="false">
-            <button id="scan-btn">Escanear</button>
+            <label for="file-input" class="file-btn">Carregar .txt</label>
+            <input type="file" id="file-input" accept=".txt,.lua" multiple hidden>
+            <button id="parse-btn">Analisar</button>
         </div>
     </header>
 
     <section class="status-bar">
         <div class="pulse-dot"></div>
-        <span id="status-text">Pronto pra escanear</span>
+        <span id="status-text">Cola o dump abaixo e clica em Analisar</span>
+    </section>
+
+    <section class="input-area">
+        <textarea id="dump-input" placeholder="Cola o dump do FtF aqui...
+
+Formato esperado:
+
+═══ REMOTE EVENTS (13) ═══
+RS/HammerEvent
+WS/HammerEvent
+WS/PowersEvent
+...
+"></textarea>
+        <div class="input-info">
+            <span id="input-stats">0 caracteres · 0 linhas</span>
+            <button id="clear-btn" class="ghost">Limpar</button>
+        </div>
     </section>
 
     <main class="content">
         <aside class="sidebar">
-            <h3>Arquivos</h3>
-            <ul id="file-list"></ul>
             <h3>Sumário</h3>
             <ul id="summary-list">
-                <li data-target="remotes">Remotes</li>
-                <li data-target="functions">Functions</li>
-                <li data-target="modules">Modules</li>
-                <li data-target="constants">Constantes</li>
+                <li data-target="remote-events">Remotes</li>
+                <li data-target="remote-functions">Functions</li>
+                <li data-target="bindable-events">Bindables</li>
+                <li data-target="local-scripts">Local Scripts</li>
+                <li data-target="module-scripts">Modules</li>
+                <li data-target="constantes">Constantes</li>
                 <li data-target="executor">Executor</li>
-                <li data-target="suggestions">Sugestões</li>
+                <li data-target="sugestoes">Sugestões</li>
             </ul>
         </aside>
 
         <section class="report" id="report">
             <div class="empty">
-                <p>Nenhum dump carregado.</p>
-                <p class="hint">Configura o repo + pasta acima e clica em <strong>Escanear</strong>.</p>
+                <p>Nenhum dump analisado ainda.</p>
+                <p class="hint">Cola o dump no campo acima ou carrega um arquivo <strong>.txt</strong>.</p>
             </div>
         </section>
     </main>
