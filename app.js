@@ -1,371 +1,357 @@
-* { margin: 0; padding: 0; box-sizing: border-box; }
+// ═══════════════════════════════════════════════════════════
+// LC10 • FTF — Análise de Dump (v2 — input direto)
+// author: x.lusca1
+// ═══════════════════════════════════════════════════════════
 
-:root {
-    --bg:       #0A0A0F;
-    --surface:  #14141C;
-    --elevated: #1C1C26;
-    --border:   #2A2A38;
-    --accent:   #8B5CF6;
-    --glow:     #C4B5FD;
-    --success:  #10B981;
-    --danger:   #EF4444;
-    --warn:     #F59E0B;
-    --text:     #F3F4F6;
-    --text2:    #9CA3AF;
-    --text3:    #6B7280;
-    --gold:     #FBBF24;
+const $ = (s) => document.querySelector(s);
+
+const state = {
+    parsed: {
+        remotes:      new Map(),
+        functions:    new Map(),
+        modules:      new Map(),
+        bindables:    new Map(),
+        constants:    new Map(),
+        localscripts: new Map(),
+        executor:     {},
+    },
+};
+
+// ─── STATUS ──────────────────────────────────────────────────
+function set_status(text, kind) {
+    const el = $("#status-text");
+    el.textContent = text;
+    el.style.color = kind === "ok"   ? "var(--success)"
+                  : kind === "err"  ? "var(--danger)"
+                  : kind === "warn" ? "var(--warn)"
+                  : "var(--text2)";
 }
 
-body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Segoe UI', 'Gotham', system-ui, sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
+function esc(str) {
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
 }
 
-.app {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+// ─── RESET ───────────────────────────────────────────────────
+function reset_parsed() {
+    state.parsed = {
+        remotes:      new Map(),
+        functions:    new Map(),
+        modules:      new Map(),
+        bindables:    new Map(),
+        constants:    new Map(),
+        localscripts: new Map(),
+        executor:     {},
+    };
 }
 
-/* HEADER */
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px 18px;
-    margin-bottom: 14px;
-    flex-wrap: wrap;
-    gap: 12px;
+// ─── PARSER ──────────────────────────────────────────────────
+function parse_text(text) {
+    const lines = text.split(/\r?\n/);
+    let current_section = null;
+
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].trim();
+        if (!line) continue;
+
+        // headers
+        if (/REMOTE\s+EVENTS/i.test(line))     { current_section = "remotes";      continue; }
+        if (/REMOTE\s+FUNCTIONS/i.test(line))  { current_section = "functions";    continue; }
+        if (/BINDABLE\s+EVENTS/i.test(line))   { current_section = "bindables";    continue; }
+        if (/LOCAL\s+SCRIPTS/i.test(line))     { current_section = "localscripts"; continue; }
+        if (/MODULE\s+SCRIPTS/i.test(line))    { current_section = "modules";      continue; }
+        if (/CONSTANTS/i.test(line))           { current_section = "constants";    continue; }
+        if (/EXECUTOR/i.test(line))            { current_section = "executor";     continue; }
+
+        // path tipo RS/Nome ou CHAR/player/Nome
+        const path_match = line.match(/^([A-Z]{2,4})\/(.+?)(?:\s+\((.+?)\))?$/);
+        if (path_match && current_section && current_section !== "executor" && current_section !== "constants") {
+            const prefix = path_match[1];
+            const rest   = path_match[2];
+            const kind   = path_match[3] || "";
+
+            let name = rest;
+            let parent = prefix;
+
+            if (prefix === "CHAR" && rest.includes("/")) {
+                const parts = rest.split("/");
+                parent = "CHAR/" + parts[0];
+                name = parts.slice(1).join("/");
+            }
+
+            if (!state.parsed[current_section]) state.parsed[current_section] = new Map();
+            if (!state.parsed[current_section].has(name)) {
+                state.parsed[current_section].set(name, { parents: new Set(), kind });
+            }
+            state.parsed[current_section].get(name).parents.add(parent);
+            continue;
+        }
+
+        // executor
+        const exec_match = line.match(/^([a-zA-Z_][\w]*)\s*[:=]\s*(.+)$/);
+        if (exec_match && current_section === "executor") {
+            state.parsed.executor[exec_match[1]] = exec_match[2].trim();
+            continue;
+        }
+
+        // constants
+        if (current_section === "constants") {
+            const c_match = line.match(/^([\w_]+)\s*=\s*(.+)$/);
+            if (c_match) state.parsed.constants.set(c_match[1], c_match[2]);
+            continue;
+        }
+
+        // executor passivo (em qualquer linha)
+        const passive = line.match(/\b(hookfunction|newcclosure|getconnections|getconstants|getrawmetatable|setreadonly|identifyexecutor|getgenv|request|syn\.request|is_sirhurt_closure|checkcaller)\b\s*[:=]\s*(\S+)/);
+        if (passive) {
+            state.parsed.executor[passive[1]] = passive[2];
+        }
+    }
 }
 
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 14px;
+// ─── SUGESTÕES ───────────────────────────────────────────────
+function build_suggestions(p) {
+    const out = [];
+
+    const hammer = Array.from(p.remotes.keys()).find(k => /hammer/i.test(k));
+    if (hammer) {
+        out.push({
+            title: "⚔ Auto-Attack (marreta)",
+            body: [
+                `Remote detectado: <code>${esc(hammer)}</code>`,
+                `Presente em: ${Array.from(p.remotes.get(hammer).parents).join(", ")}`,
+                "Dispara só no client do atacante. Pra atacar sozinho: <code>" + esc(hammer) + ":FireServer(target, ...)</code>.",
+                "Precisa confirmar args reais com sniffer rodando no jogo.",
+            ].join("<br>"),
+        });
+    }
+
+    const status = Array.from(p.remotes.keys()).find(k => /status/i.test(k));
+    if (status) {
+        out.push({
+            title: "🔒 Anti-Captura / Auto-Hack",
+            body: [
+                `Remote: <code>${esc(status)}</code>`,
+                `Payload: <code>{Content = {player = "Estado"}, Type = "Edit"}</code>`,
+                `Estados: <code>Idle</code>, <code>Hacking</code>, <code>Captured</code>, <code>Seen</code>, <code>Detected</code>`,
+                "<strong>Anti-captura:</strong> interceptar OnClientEvent e remover <code>Content[meu_nome]</code> quando for <code>\"Captured\"</code>.",
+                "<strong>Auto-hack:</strong> <code>" + esc(status) + ":FireServer({Content={meu_nome=\"Hacking\"}, Type=\"Edit\"})</code>",
+            ].join("<br>"),
+        });
+    }
+
+    const detected = Array.from(p.remotes.keys()).find(k => /detect/i.test(k));
+    if (detected) {
+        out.push({
+            title: "👁 Anti-Detecção",
+            body: [
+                `Remote: <code>${esc(detected)}</code>`,
+                `Payload: <code>(true, "Seen")</code> ou <code>(true, "Detected")</code> = viram. <code>(false)</code> = limpo.`,
+                "Bloqueio real precisa de <code>getconnections</code> pra desabilitar as conexões do script do jogo.",
+            ].join("<br>"),
+        });
+    }
+
+    out.push({
+        title: "📦 Hitbox Expander",
+        body: [
+            "Não há hitbox de combate no FtF — o que dá pra expandir é o <strong>character</strong> pra interagir com objetos.",
+            "Iterar <code>Character:GetChildren()</code>, filtrar <code>BasePart</code> e ajustar <code>Size</code> + <code>Transparency = 0.7</code>.",
+            "Atenção: <code>CanCollide = false</code> nos pés te faz cair do mapa.",
+        ].join("<br>"),
+    });
+
+    if (Object.keys(p.executor).length > 0) {
+        const has_hook = p.executor.hookfunction && p.executor.hookfunction !== "nil";
+        const has_conn = p.executor.getconnections && p.executor.getconnections !== "nil";
+        out.push({
+            title: "🛠 Executor",
+            body: [
+                `<code>hookfunction</code>: <span class="tag ${has_hook ? "ok" : "no"}">${has_hook ? "DISPONÍVEL" : "AUSENTE"}</span>`,
+                `<code>getconnections</code>: <span class="tag ${has_conn ? "ok" : "no"}">${has_conn ? "DISPONÍVEL" : "AUSENTE"}</span>`,
+                has_hook ? "Pode hookar FireServer/OnClientEvent." : "Sem hookfunction, o script só escuta.",
+                has_conn ? "Pode desabilitar conexões específicas." : "Sem getconnections, anti-detecção é visual.",
+            ].join("<br>"),
+        });
+    }
+
+    return out;
 }
 
-.logo {
-    background: linear-gradient(135deg, var(--accent), var(--glow));
-    color: white;
-    font-weight: 900;
-    font-size: 14px;
-    padding: 10px 14px;
-    border-radius: 10px;
-    letter-spacing: 1px;
+// ─── RENDER ──────────────────────────────────────────────────
+function make_section(title, count) {
+    const wrap = document.createElement("div");
+    wrap.className = "section";
+    wrap.id = "sec-" + title.toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+    wrap.innerHTML = `
+        <div class="section-title">
+            <span>${esc(title)}</span>
+            <span class="count">${count}</span>
+        </div>
+        <div class="body"></div>`;
+    return { wrap, body: wrap.querySelector(".body") };
 }
 
-.brand-text h1 {
-    font-size: 18px;
-    color: var(--text);
+function render_map(parent, key, title) {
+    const map = state.parsed[key];
+    if (!map || map.size === 0) return;
+
+    const sec = make_section(title, map.size);
+    const sorted = Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+
+    for (const [name, info] of sorted) {
+        const parents = Array.from(info.parents).join(", ");
+        sec.body.innerHTML += `
+            <div class="entry">
+                <span class="name">${esc(name)}</span>
+                <div class="meta">${info.kind ? "(" + esc(info.kind) + ") " : ""}em: ${esc(parents)}</div>
+            </div>`;
+    }
+    parent.appendChild(sec.wrap);
 }
 
-.brand-text span {
-    font-size: 12px;
-    color: var(--text3);
+function render_report() {
+    const p = state.parsed;
+    const rep = $("#report");
+    rep.innerHTML = "";
+
+    const total = p.remotes.size + p.functions.size + p.modules.size + p.bindables.size + p.localscripts.size;
+
+    if (total === 0 && Object.keys(p.executor).length === 0) {
+        rep.innerHTML = `<div class="empty">
+            <p>Nenhum dado parseado.</p>
+            <p class="hint">Verifica se o texto tem linhas tipo <strong>RS/Nome</strong>, <strong>WS/Nome</strong>, ou headers <strong>═══</strong>.</p>
+        </div>`;
+        return;
+    }
+
+    render_map(rep, "remotes",      "Remote Events");
+    render_map(rep, "functions",    "Remote Functions");
+    render_map(rep, "bindables",    "Bindable Events");
+    render_map(rep, "localscripts", "Local Scripts");
+    render_map(rep, "modules",      "Module Scripts");
+    render_map(rep, "constants",    "Constantes");
+
+    if (Object.keys(p.executor).length > 0) {
+        const sec = make_section("Executor", Object.keys(p.executor).length);
+        for (const [k, v] of Object.entries(p.executor)) {
+            const ok = v !== "nil" && v !== "false";
+            sec.body.innerHTML += `
+                <div class="entry">
+                    <span class="name">${esc(k)}</span>
+                    <div class="meta">
+                        <span class="tag ${ok ? "ok" : "no"}">${ok ? "disponível" : "ausente"}</span>
+                        valor: ${esc(v)}
+                    </div>
+                </div>`;
+        }
+        rep.appendChild(sec.wrap);
+    }
+
+    const sug = build_suggestions(p);
+    if (sug.length > 0) {
+        const sec = make_section("Sugestões", sug.length);
+        for (const s of sug) {
+            sec.body.innerHTML += `
+                <div class="suggestion">
+                    <h4>${s.title}</h4>
+                    <p>${s.body}</p>
+                </div>`;
+        }
+        rep.appendChild(sec.wrap);
+    }
 }
 
-.controls {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
+// ─── MAIN ────────────────────────────────────────────────────
+function run_parse() {
+    const text = $("#dump-input").value;
+    if (!text.trim()) {
+        set_status("Cola o dump primeiro", "err");
+        return;
+    }
+
+    set_status("Analisando...", "warn");
+    reset_parsed();
+    parse_text(text);
+    render_report();
+
+    const total = state.parsed.remotes.size
+        + state.parsed.functions.size
+        + state.parsed.modules.size
+        + state.parsed.bindables.size
+        + state.parsed.localscripts.size
+        + state.parsed.constants.size
+        + Object.keys(state.parsed.executor).length;
+
+    set_status(`Pronto — ${total} entrada(s) encontrada(s)`, "ok");
 }
 
-.file-btn, .controls button {
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 20px;
-    font-weight: 600;
-    font-size: 13px;
-    cursor: pointer;
-    transition: background 0.2s;
-    display: inline-block;
-    user-select: none;
+// ─── STATS DO INPUT ──────────────────────────────────────────
+function update_stats() {
+    const v = $("#dump-input").value;
+    const chars = v.length;
+    const lines = v ? v.split(/\r?\n/).length : 0;
+    $("#input-stats").textContent = `${chars} caracteres · ${lines} linhas`;
 }
 
-.file-btn:hover, .controls button:hover {
-    background: var(--glow);
-    color: var(--bg);
+// ─── FILE INPUT ──────────────────────────────────────────────
+async function load_files(files) {
+    let combined = $("#dump-input").value;
+    for (const f of files) {
+        try {
+            const txt = await f.text();
+            combined += (combined ? "\n\n" : "") + txt;
+        } catch (e) {
+            console.warn("erro lendo arquivo", f.name, e);
+        }
+    }
+    $("#dump-input").value = combined;
+    update_stats();
+    set_status(`${files.length} arquivo(s) carregado(s)`, "ok");
 }
 
-/* STATUS */
-.status-bar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 18px;
-    margin-bottom: 14px;
-    font-size: 13px;
-    color: var(--text2);
-}
+// ─── BIND ────────────────────────────────────────────────────
+$("#parse-btn").addEventListener("click", run_parse);
+$("#clear-btn").addEventListener("click", () => {
+    $("#dump-input").value = "";
+    update_stats();
+    set_status("Limpo", "ok");
+    $("#report").innerHTML = `<div class="empty"><p>Nenhum dump analisado ainda.</p>
+        <p class="hint">Cola o dump no campo acima ou carrega um arquivo <strong>.txt</strong>.</p></div>`;
+});
 
-.pulse-dot {
-    width: 8px;
-    height: 8px;
-    background: var(--accent);
-    border-radius: 50%;
-    animation: pulse 1.6s infinite;
-    flex-shrink: 0;
-}
+$("#dump-input").addEventListener("input", update_stats);
 
-@keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50%      { opacity: 0.4; transform: scale(0.8); }
-}
+$("#file-input").addEventListener("change", (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 0) load_files(files);
+    e.target.value = "";
+});
 
-/* INPUT AREA */
-.input-area {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px;
-    margin-bottom: 14px;
-}
+// drag&drop no textarea
+$("#dump-input").addEventListener("dragover", (e) => {
+    e.preventDefault();
+    e.currentTarget.style.borderColor = "var(--accent)";
+});
+$("#dump-input").addEventListener("dragleave", (e) => {
+    e.currentTarget.style.borderColor = "var(--border)";
+});
+$("#dump-input").addEventListener("drop", (e) => {
+    e.preventDefault();
+    e.currentTarget.style.borderColor = "var(--border)";
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) load_files(files);
+});
 
-#dump-input {
-    width: 100%;
-    height: 180px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 14px;
-    color: var(--text);
-    font-family: 'Consolas', 'Monaco', monospace;
-    font-size: 12px;
-    line-height: 1.5;
-    resize: vertical;
-    outline: none;
-    transition: border 0.2s;
-}
-
-#dump-input:focus {
-    border-color: var(--accent);
-}
-
-#dump-input::placeholder {
-    color: var(--text3);
-}
-
-.input-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 10px;
-    font-size: 11px;
-    color: var(--text3);
-    font-family: 'Consolas', monospace;
-}
-
-.ghost {
-    background: transparent !important;
-    border: 1px solid var(--border) !important;
-    color: var(--text2) !important;
-    padding: 6px 14px !important;
-    font-size: 11px !important;
-}
-
-.ghost:hover {
-    border-color: var(--danger) !important;
-    color: var(--danger) !important;
-    background: transparent !important;
-}
-
-/* LAYOUT */
-.content {
-    display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 14px;
-    flex: 1;
-}
-
-.sidebar {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
-    height: fit-content;
-    position: sticky;
-    top: 20px;
-}
-
-.sidebar h3 {
-    font-size: 11px;
-    text-transform: uppercase;
-    color: var(--text3);
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-    padding-bottom: 6px;
-    border-bottom: 1px solid var(--border);
-}
-
-.sidebar ul { list-style: none; }
-
-.sidebar li {
-    font-size: 12px;
-    color: var(--text2);
-    padding: 7px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.15s;
-    font-family: 'Consolas', monospace;
-}
-
-.sidebar li:hover {
-    background: var(--elevated);
-    color: var(--glow);
-}
-
-/* REPORT */
-.report {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    overflow-x: auto;
-    min-height: 300px;
-}
-
-.empty {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text3);
-}
-
-.empty .hint {
-    margin-top: 10px;
-    font-size: 13px;
-}
-
-.empty strong { color: var(--accent); }
-
-.section {
-    margin-bottom: 28px;
-    scroll-margin-top: 20px;
-}
-
-.section-title {
-    font-size: 13px;
-    color: var(--glow);
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.section-title .count {
-    font-size: 11px;
-    color: var(--text3);
-    background: var(--elevated);
-    padding: 3px 10px;
-    border-radius: 10px;
-}
-
-.entry {
-    background: var(--elevated);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 14px;
-    margin-bottom: 6px;
-    font-family: 'Consolas', monospace;
-    font-size: 12px;
-    transition: border 0.15s;
-}
-
-.entry:hover { border-color: var(--accent); }
-
-.entry .name {
-    color: var(--gold);
-    font-weight: 600;
-    margin-bottom: 4px;
-    font-size: 13px;
-    display: block;
-    word-break: break-all;
-}
-
-.entry .meta {
-    color: var(--text3);
-    font-size: 11px;
-}
-
-.tag {
-    display: inline-block;
-    font-size: 10px;
-    padding: 2px 8px;
-    border-radius: 4px;
-    margin-right: 6px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.tag.ok { background: rgba(16,185,129,0.15); color: var(--success); }
-.tag.no { background: rgba(239,68,68,0.15);  color: var(--danger); }
-
-.suggestion {
-    background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(196,181,253,0.03));
-    border: 1px solid var(--accent);
-    border-radius: 10px;
-    padding: 14px 18px;
-    margin-bottom: 10px;
-}
-
-.suggestion h4 {
-    color: var(--glow);
-    font-size: 14px;
-    margin-bottom: 8px;
-}
-
-.suggestion p {
-    font-size: 12px;
-    color: var(--text2);
-    line-height: 1.6;
-}
-
-.suggestion code {
-    background: var(--bg);
-    padding: 2px 6px;
-    border-radius: 3px;
-    color: var(--gold);
-    font-family: 'Consolas', monospace;
-    font-size: 11px;
-}
-
-.footer {
-    text-align: center;
-    color: var(--text3);
-    font-size: 11px;
-    padding: 20px 0 0;
-    margin-top: 20px;
-    border-top: 1px solid var(--border);
-}
-
-/* MOBILE */
-@media (max-width: 700px) {
-    .app { padding: 12px; }
-    .content { grid-template-columns: 1fr; }
-    .sidebar { position: static; }
-    .report { padding: 14px; }
-    .header { padding: 12px; }
-    .logo { font-size: 12px; padding: 8px 10px; }
-    .brand-text h1 { font-size: 15px; }
-    .controls { width: 100%; }
-    .controls button, .file-btn { flex: 1; text-align: center; }
-    #dump-input { height: 140px; }
-}
+// sumário — scroll pras seções
+document.querySelectorAll("#summary-list li").forEach(li => {
+    li.addEventListener("click", () => {
+        const target = li.dataset.target;
+        const sec = document.getElementById("sec-" + target);
+        if (sec) sec.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+});
