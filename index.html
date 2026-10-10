@@ -14,15 +14,72 @@
             <div class="logo">LC10</div>
             <div class="brand-text">
                 <h1>LC10 • Dump Analyzer</h1>
-                <span>Análise universal de dumps Roblox — por x.lusca1</span>
+                <span>Análise universal — por x.lusca1</span>
             </div>
         </div>
         <div class="controls">
-            <label for="file-input" class="file-btn">Carregar .txt</label>
+            <label for="file-input" class="file-btn">Carregar</label>
             <input type="file" id="file-input" accept=".txt,.lua,.json" multiple hidden>
             <button id="parse-btn">Analisar</button>
+            <button id="menu-btn" class="hamburger" title="Menu">
+                <span></span><span></span><span></span>
+            </button>
         </div>
     </header>
+
+    <!-- dropdown do menu -->
+    <div id="menu-dropdown" class="menu-dropdown hidden">
+        <div class="menu-header">Ferramentas LC10</div>
+        <button class="menu-item" data-action="filter-toggle">
+            <span class="menu-icon">🔍</span>
+            <span>
+                <strong>Filtrar resultados</strong>
+                <small>Busca em tempo real</small>
+            </span>
+        </button>
+        <button class="menu-item" data-action="important-toggle">
+            <span class="menu-icon">✨</span>
+            <span>
+                <strong>Modo só o importante</strong>
+                <small>Esconde remotes genéricos</small>
+            </span>
+        </button>
+        <div class="menu-sep"></div>
+        <button class="menu-item" data-action="skeleton">
+            <span class="menu-icon">🧩</span>
+            <span>
+                <strong>Gerar esqueleto</strong>
+                <small>Estrutura Lua dos hooks</small>
+            </span>
+        </button>
+        <button class="menu-item" data-action="sniffer">
+            <span class="menu-icon">📡</span>
+            <span>
+                <strong>Gerar sniffer</strong>
+                <small>Captura args em tempo real</small>
+            </span>
+        </button>
+        <button class="menu-item" data-action="fullscript">
+            <span class="menu-icon">⚡</span>
+            <span>
+                <strong>Gerar script completo</strong>
+                <small>Painel funcional adaptado</small>
+            </span>
+        </button>
+        <div class="menu-sep"></div>
+        <button class="menu-item" data-action="export-txt">
+            <span class="menu-icon">📄</span>
+            <span><strong>Exportar .txt</strong></span>
+        </button>
+        <button class="menu-item" data-action="export-md">
+            <span class="menu-icon">📝</span>
+            <span><strong>Exportar .md</strong></span>
+        </button>
+        <button class="menu-item" data-action="export-json">
+            <span class="menu-icon">🗂️</span>
+            <span><strong>Exportar .json</strong></span>
+        </button>
+    </div>
 
     <section class="status-bar">
         <div class="pulse-dot"></div>
@@ -30,18 +87,24 @@
     </section>
 
     <section class="input-area">
-        <textarea id="dump-input" placeholder="Cola o dump aqui — pode ser:
+        <textarea id="dump-input" placeholder="Cola o dump aqui — qualquer jogo Roblox, qualquer formato.
 
-• Source Lua bruto de qualquer jogo Roblox
-• Dump estruturado (RS/Nome, WS/Nome, headers)
-• Output de sniffer / SaveInstance / executor dump
+• Source Lua bruto
+• Dump estruturado (RS/Nome, WS/Nome)
+• Output de sniffer / SaveInstance
 
-Formato não importa. O analisador detecta padrões sozinho.
-"></textarea>
+O analisador detecta padrões sozinho."></textarea>
         <div class="input-info">
             <span id="input-stats">0 caracteres · 0 linhas</span>
             <button id="clear-btn" class="ghost">Limpar</button>
         </div>
+    </section>
+
+    <!-- barra de filtro (escondida por padrão) -->
+    <section id="filter-bar" class="filter-bar hidden">
+        <input type="text" id="filter-input" placeholder="Filtrar entradas por nome... (ex: attack, status, remote)" spellcheck="false">
+        <span id="filter-count" class="filter-count"></span>
+        <button id="filter-clear" class="ghost">×</button>
     </section>
 
     <main class="content">
@@ -54,8 +117,8 @@ Formato não importa. O analisador detecta padrões sozinho.
                 <li data-target="bindable-events">Bindables</li>
                 <li data-target="module-scripts">Modules</li>
                 <li data-target="local-scripts">Local Scripts</li>
-                <li data-target="fire-calls">FireServer / FireClient</li>
-                <li data-target="mencoes">Menções frequentes</li>
+                <li data-target="fireserver-fireclient-calls">Fire Calls</li>
+                <li data-target="mencoes-frequentes">Menções</li>
                 <li data-target="executor">Executor</li>
                 <li data-target="sugestoes">Sugestões</li>
             </ul>
@@ -64,7 +127,7 @@ Formato não importa. O analisador detecta padrões sozinho.
         <section class="report" id="report">
             <div class="empty">
                 <p>Nenhum dump analisado ainda.</p>
-                <p class="hint">Cola o dump no campo acima ou carrega um arquivo <strong>.txt</strong> / <strong>.lua</strong>.</p>
+                <p class="hint">Cola o dump acima ou carrega um arquivo <strong>.txt</strong> / <strong>.lua</strong>.</p>
             </div>
         </section>
     </main>
@@ -72,6 +135,21 @@ Formato não importa. O analisador detecta padrões sozinho.
     <footer class="footer">
         LC10 • Dump Analyzer — by x.lusca1
     </footer>
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="modal hidden">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2 id="modal-title">Saída</h2>
+            <div class="modal-actions">
+                <button id="modal-copy" class="ghost">Copiar</button>
+                <button id="modal-download" class="ghost">Baixar</button>
+                <button id="modal-close" class="modal-close">×</button>
+            </div>
+        </div>
+        <pre id="modal-content"></pre>
+    </div>
 </div>
 
 <script src="app.js"></script>
