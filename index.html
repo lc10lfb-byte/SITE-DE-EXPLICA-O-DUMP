@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LC10 • FTF — Análise de Dump</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+    <header class="header">
+        <div class="brand">
+            <div class="logo">LC10</div>
+            <div class="brand-text">
+                <h1>LC10 • FTF</h1>
+                <span>Análise de Dump — por x.lusca1</span>
+            </div>
+        </div>
+        <div class="controls">
+            <input type="text" id="repo-input" placeholder="usuario/repo" spellcheck="false">
+            <input type="text" id="path-input" placeholder="dumps" value="dumps" spellcheck="false">
+            <button id="scan-btn">Escanear</button>
+        </div>
+    </header>
+
+    <section class="status-bar">
+        <div class="pulse-dot"></div>
+        <span id="status-text">Pronto pra escanear</span>
+    </section>
+
+    <main class="content">
+        <aside class="sidebar">
+            <h3>Arquivos</h3>
+            <ul id="file-list"></ul>
+            <h3>Sumário</h3>
+            <ul id="summary-list">
+                <li data-target="remotes">Remotes</li>
+                <li data-target="functions">Functions</li>
+                <li data-target="modules">Modules</li>
+                <li data-target="constants">Constantes</li>
+                <li data-target="executor">Executor</li>
+                <li data-target="suggestions">Sugestões</li>
+            </ul>
+        </aside>
+
+        <section class="report" id="report">
+            <div class="empty">
+                <p>Nenhum dump carregado.</p>
+                <p class="hint">Configura o repo + pasta acima e clica em <strong>Escanear</strong>.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        LC10 • FTF — by x.lusca1
+    </footer>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
