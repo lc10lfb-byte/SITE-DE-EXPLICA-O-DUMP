@@ -33,7 +33,6 @@ body {
     min-height: 100vh;
 }
 
-/* HEADER */
 .header {
     display: flex;
     justify-content: space-between;
@@ -47,11 +46,7 @@ body {
     gap: 12px;
 }
 
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-}
+.brand { display: flex; align-items: center; gap: 14px; }
 
 .logo {
     background: linear-gradient(135deg, var(--accent), var(--glow));
@@ -63,21 +58,10 @@ body {
     letter-spacing: 1px;
 }
 
-.brand-text h1 {
-    font-size: 18px;
-    color: var(--text);
-}
+.brand-text h1 { font-size: 18px; color: var(--text); }
+.brand-text span { font-size: 12px; color: var(--text3); }
 
-.brand-text span {
-    font-size: 12px;
-    color: var(--text3);
-}
-
-.controls {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
+.controls { display: flex; gap: 8px; flex-wrap: wrap; }
 
 .file-btn, .controls button {
     background: var(--accent);
@@ -98,7 +82,6 @@ body {
     color: var(--bg);
 }
 
-/* STATUS */
 .status-bar {
     display: flex;
     align-items: center;
@@ -113,8 +96,7 @@ body {
 }
 
 .pulse-dot {
-    width: 8px;
-    height: 8px;
+    width: 8px; height: 8px;
     background: var(--accent);
     border-radius: 50%;
     animation: pulse 1.6s infinite;
@@ -126,7 +108,6 @@ body {
     50%      { opacity: 0.4; transform: scale(0.8); }
 }
 
-/* INPUT AREA */
 .input-area {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -151,13 +132,8 @@ body {
     transition: border 0.2s;
 }
 
-#dump-input:focus {
-    border-color: var(--accent);
-}
-
-#dump-input::placeholder {
-    color: var(--text3);
-}
+#dump-input:focus { border-color: var(--accent); }
+#dump-input::placeholder { color: var(--text3); }
 
 .input-info {
     display: flex;
@@ -183,7 +159,6 @@ body {
     background: transparent !important;
 }
 
-/* LAYOUT */
 .content {
     display: grid;
     grid-template-columns: 200px 1fr;
@@ -228,7 +203,6 @@ body {
     color: var(--glow);
 }
 
-/* REPORT */
 .report {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -238,23 +212,11 @@ body {
     min-height: 300px;
 }
 
-.empty {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text3);
-}
-
-.empty .hint {
-    margin-top: 10px;
-    font-size: 13px;
-}
-
+.empty { text-align: center; padding: 60px 20px; color: var(--text3); }
+.empty .hint { margin-top: 10px; font-size: 13px; }
 .empty strong { color: var(--accent); }
 
-.section {
-    margin-bottom: 28px;
-    scroll-margin-top: 20px;
-}
+.section { margin-bottom: 28px; scroll-margin-top: 20px; }
 
 .section-title {
     font-size: 13px;
@@ -299,9 +261,60 @@ body {
     word-break: break-all;
 }
 
-.entry .meta {
+.entry .meta { color: var(--text3); font-size: 11px; }
+
+.entry .snippet {
     color: var(--text3);
-    font-size: 11px;
+    font-size: 10.5px;
+    margin-top: 6px;
+    padding: 6px 8px;
+    background: var(--bg);
+    border-radius: 4px;
+    word-break: break-all;
+    line-height: 1.4;
+}
+
+.freq-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 6px;
+    overflow: hidden;
+}
+
+.freq-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--glow));
+    border-radius: 2px;
+    transition: width 0.4s;
+}
+
+.game-card {
+    background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(196,181,253,0.05));
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.game-card h2 {
+    color: var(--glow);
+    font-size: 20px;
+    margin-bottom: 6px;
+}
+
+.game-card .game-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--text2);
+    margin-top: 10px;
+}
+
+.game-card .game-meta span strong {
+    color: var(--text);
+    font-family: 'Consolas', monospace;
 }
 
 .tag {
@@ -317,6 +330,8 @@ body {
 
 .tag.ok { background: rgba(16,185,129,0.15); color: var(--success); }
 .tag.no { background: rgba(239,68,68,0.15);  color: var(--danger); }
+.tag.remote { background: rgba(139,92,246,0.2);  color: var(--glow); }
+.tag.info { background: rgba(245,158,11,0.15); color: var(--warn); }
 
 .suggestion {
     background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(196,181,253,0.03));
@@ -336,6 +351,7 @@ body {
     font-size: 12px;
     color: var(--text2);
     line-height: 1.6;
+    margin-bottom: 6px;
 }
 
 .suggestion code {
@@ -356,7 +372,6 @@ body {
     border-top: 1px solid var(--border);
 }
 
-/* MOBILE */
 @media (max-width: 700px) {
     .app { padding: 12px; }
     .content { grid-template-columns: 1fr; }
