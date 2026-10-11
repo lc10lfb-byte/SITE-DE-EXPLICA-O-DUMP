@@ -20,16 +20,16 @@
             </div>
         </div>
         <div class="topbar-right">
-            <label for="file-input" class="btn ghost-btn" title="Carregar arquivo">
+            <button id="file-btn" class="btn ghost-btn" title="Carregar arquivo" type="button">
                 <span class="btn-icon">📁</span>
                 <span>Carregar</span>
-            </label>
-            <input type="file" id="file-input" accept=".txt,.lua,.json" multiple hidden>
-            <button id="parse-btn" class="btn primary">
+            </button>
+            <input type="file" id="file-input" accept=".txt,.lua,.json,text/plain,*/*" multiple style="display:none;">
+            <button id="parse-btn" class="btn primary" type="button">
                 <span class="btn-icon">⚡</span>
                 <span>Analisar</span>
             </button>
-            <button id="menu-btn" class="btn icon-btn hamburger" aria-label="Menu">
+            <button id="menu-btn" class="btn icon-btn hamburger" type="button" aria-label="Menu">
                 <span></span><span></span><span></span>
             </button>
         </div>
@@ -38,14 +38,14 @@
     <!-- ═══════════ MENU DROPDOWN ═══════════ -->
     <div id="menu-dropdown" class="menu hidden">
         <div class="menu-title">Ferramentas</div>
-        <button class="menu-item" data-action="filter-toggle">
+        <button class="menu-item" data-action="filter-toggle" type="button">
             <span class="mi-icon">🔍</span>
             <div class="mi-text">
                 <strong>Filtrar resultados</strong>
                 <small>Busca em tempo real</small>
             </div>
         </button>
-        <button class="menu-item" data-action="important-toggle">
+        <button class="menu-item" data-action="important-toggle" type="button">
             <span class="mi-icon">✨</span>
             <div class="mi-text">
                 <strong>Modo foco</strong>
@@ -53,21 +53,21 @@
             </div>
         </button>
         <div class="menu-sep"></div>
-        <button class="menu-item" data-action="skeleton">
+        <button class="menu-item" data-action="skeleton" type="button">
             <span class="mi-icon">🧩</span>
             <div class="mi-text">
                 <strong>Gerar esqueleto</strong>
                 <small>Estrutura Lua dos hooks</small>
             </div>
         </button>
-        <button class="menu-item" data-action="sniffer">
+        <button class="menu-item" data-action="sniffer" type="button">
             <span class="mi-icon">📡</span>
             <div class="mi-text">
                 <strong>Gerar sniffer</strong>
                 <small>Captura args em tempo real</small>
             </div>
         </button>
-        <button class="menu-item highlight" data-action="fullscript">
+        <button class="menu-item highlight" data-action="fullscript" type="button">
             <span class="mi-icon">⚡</span>
             <div class="mi-text">
                 <strong>Gerar script completo</strong>
@@ -77,9 +77,9 @@
         <div class="menu-sep"></div>
         <div class="menu-title">Exportar</div>
         <div class="menu-grid">
-            <button class="menu-item compact" data-action="export-txt"><span class="mi-icon">📄</span> TXT</button>
-            <button class="menu-item compact" data-action="export-md"><span class="mi-icon">📝</span> MD</button>
-            <button class="menu-item compact" data-action="export-json"><span class="mi-icon">🗂️</span> JSON</button>
+            <button class="menu-item compact" data-action="export-txt" type="button"><span class="mi-icon">📄</span> TXT</button>
+            <button class="menu-item compact" data-action="export-md" type="button"><span class="mi-icon">📝</span> MD</button>
+            <button class="menu-item compact" data-action="export-json" type="button"><span class="mi-icon">🗂️</span> JSON</button>
         </div>
     </div>
 
@@ -100,7 +100,7 @@
 O analisador detecta os padrões sozinho."></textarea>
         <div class="input-footer">
             <span id="input-stats" class="mono">0 chars · 0 linhas</span>
-            <button id="clear-btn" class="btn tiny">Limpar</button>
+            <button id="clear-btn" class="btn tiny" type="button">Limpar</button>
         </div>
     </section>
 
@@ -109,7 +109,7 @@ O analisador detecta os padrões sozinho."></textarea>
         <span class="fb-icon">🔍</span>
         <input type="text" id="filter-input" placeholder="Filtrar entradas por nome..." spellcheck="false">
         <span id="filter-count" class="fb-count"></span>
-        <button id="filter-clear" class="fb-close">×</button>
+        <button id="filter-clear" class="fb-close" type="button">×</button>
     </section>
 
     <!-- ═══════════ CONTENT ═══════════ -->
@@ -153,7 +153,7 @@ O analisador detecta os padrões sozinho."></textarea>
                 <h2 id="config-title">⚡ Gerar Script</h2>
                 <span class="modal-sub" id="config-sub">Configura o script que tu quer</span>
             </div>
-            <button class="modal-close" onclick="document.getElementById('config-modal').classList.add('hidden')">×</button>
+            <button class="modal-close" type="button" onclick="document.getElementById('config-modal').classList.add('hidden')">×</button>
         </div>
 
         <div class="modal-body">
@@ -166,15 +166,15 @@ painel gui, aimbot, esp, speed, jump, teleport, anti-detect"></textarea>
 
             <div class="field-suggestions">
                 <span class="sug-label">Sugestões rápidas:</span>
-                <button class="sug-chip" data-sug="painel gui, esp, aimbot">🎯 FPS Pack</button>
-                <button class="sug-chip" data-sug="painel gui, speed, jump, fly, noclip">🏃 Movement Pack</button>
-                <button class="sug-chip" data-sug="painel gui, anti-detect, anti-state, godmode">🛡️ Stealth Pack</button>
-                <button class="sug-chip" data-sug="painel gui, esp, stats, fullbright">👁️ Visual Pack</button>
+                <button class="sug-chip" type="button" data-sug="painel gui, esp, aimbot">🎯 FPS Pack</button>
+                <button class="sug-chip" type="button" data-sug="painel gui, speed, jump, fly, noclip">🏃 Movement Pack</button>
+                <button class="sug-chip" type="button" data-sug="painel gui, anti-detect, anti-state, godmode">🛡️ Stealth Pack</button>
+                <button class="sug-chip" type="button" data-sug="painel gui, esp, stats, fullbright">👁️ Visual Pack</button>
             </div>
 
             <label class="field-label">Suporte</label>
             <div class="platform-picker">
-                <button class="platform-option" data-platform="mobile">
+                <button class="platform-option" type="button" data-platform="mobile">
                     <span class="plat-icon">📱</span>
                     <div class="plat-text">
                         <strong>Mobile</strong>
@@ -182,7 +182,7 @@ painel gui, aimbot, esp, speed, jump, teleport, anti-detect"></textarea>
                     </div>
                     <span class="plat-check">✓</span>
                 </button>
-                <button class="platform-option" data-platform="pc">
+                <button class="platform-option" type="button" data-platform="pc">
                     <span class="plat-icon">🖥️</span>
                     <div class="plat-text">
                         <strong>PC</strong>
@@ -195,7 +195,7 @@ painel gui, aimbot, esp, speed, jump, teleport, anti-detect"></textarea>
         </div>
 
         <div class="modal-foot">
-            <button id="generate-btn" class="btn primary large">
+            <button id="generate-btn" class="btn primary large" type="button">
                 <span class="btn-icon">⚡</span>
                 <span>Gerar Script</span>
             </button>
@@ -212,9 +212,9 @@ painel gui, aimbot, esp, speed, jump, teleport, anti-detect"></textarea>
                 <span class="modal-sub" id="output-sub"></span>
             </div>
             <div class="modal-actions">
-                <button id="output-copy" class="btn tiny">Copiar</button>
-                <button id="output-download" class="btn tiny">Baixar</button>
-                <button class="modal-close" onclick="document.getElementById('output-modal').classList.add('hidden')">×</button>
+                <button id="output-copy" class="btn tiny" type="button">Copiar</button>
+                <button id="output-download" class="btn tiny" type="button">Baixar</button>
+                <button class="modal-close" type="button" onclick="document.getElementById('output-modal').classList.add('hidden')">×</button>
             </div>
         </div>
         <pre id="output-content"></pre>
