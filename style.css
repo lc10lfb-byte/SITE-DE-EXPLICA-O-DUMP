@@ -141,6 +141,7 @@ body {
     height: 42px;
     padding: 0;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 /* ═══════════ HAMBURGER ═══════════ */
@@ -148,6 +149,7 @@ body {
     flex-direction: column;
     gap: 4px;
     background: var(--elevated) !important;
+    display: inline-flex !important;
 }
 
 .hamburger span {
@@ -157,6 +159,7 @@ body {
     background: var(--text2);
     border-radius: 2px;
     transition: all var(--transition);
+    flex-shrink: 0;
 }
 
 .hamburger:hover span { background: var(--glow); }
@@ -224,7 +227,7 @@ body {
     background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(196,181,253,0.08));
 }
 
-.mi-icon { font-size: 16px; width: 22px; text-align: center; }
+.mi-icon { font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; }
 
 .mi-text { display: flex; flex-direction: column; gap: 1px; flex: 1; }
 .mi-text strong { font-weight: 500; font-size: 13px; }
@@ -294,6 +297,8 @@ body {
     align-items: baseline;
     margin-bottom: 12px;
     padding: 0 4px;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
 .card-header h2 {
@@ -356,7 +361,7 @@ body {
     animation: dropIn 0.2s;
 }
 
-.fb-icon { font-size: 16px; opacity: 0.7; }
+.fb-icon { font-size: 16px; opacity: 0.7; flex-shrink: 0; }
 
 #filter-input {
     flex: 1;
@@ -367,6 +372,7 @@ body {
     font-size: 13px;
     outline: none;
     padding: 4px 0;
+    min-width: 0;
 }
 
 #filter-input::placeholder { color: var(--text3); }
@@ -378,6 +384,7 @@ body {
     padding: 3px 10px;
     background: rgba(139,92,246,0.15);
     border-radius: 12px;
+    white-space: nowrap;
 }
 
 .fb-close {
@@ -393,6 +400,7 @@ body {
     justify-content: center;
     border-radius: 6px;
     transition: all var(--transition);
+    flex-shrink: 0;
 }
 
 .fb-close:hover { background: var(--hover); color: var(--danger); }
@@ -573,6 +581,7 @@ body {
     font-weight: 700;
     margin-bottom: 4px;
     letter-spacing: -0.4px;
+    word-break: break-word;
 }
 
 .game-card .game-meta {
@@ -707,7 +716,7 @@ body {
 .modal-head h2 { font-size: 15px; font-weight: 600; color: var(--text); }
 .modal-sub { font-size: 11.5px; color: var(--text3); }
 
-.modal-actions { display: flex; gap: 8px; align-items: center; }
+.modal-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
 .modal-close {
     background: var(--danger);
@@ -723,6 +732,7 @@ body {
     align-items: center;
     justify-content: center;
     transition: all var(--transition);
+    flex-shrink: 0;
 }
 
 .modal-close:hover { background: #B91C1C; transform: scale(1.05); }
@@ -868,7 +878,6 @@ body {
     margin: 0;
 }
 
-/* scrollbars */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: var(--bg2); }
 ::-webkit-scrollbar-thumb {
@@ -894,11 +903,29 @@ body {
     .app { padding: 12px; }
     .topbar { padding: 12px; gap: 10px; }
     .brand h1 { font-size: 15px; }
+    .brand span { font-size: 10px; }
     .logo { font-size: 13px; padding: 9px 12px; }
     .btn { padding: 9px 14px; font-size: 12px; }
-    .btn-icon { font-size: 12px; }
-    .topbar-right .btn span:not(.btn-icon) { display: none; }
-    .topbar-right .btn.primary span:not(.btn-icon) { display: inline; }
+    .btn-icon { font-size: 13px; }
+
+    /* esconde texto dos botões EXCETO do primary */
+    .topbar-right .btn:not(.hamburger):not(.primary) span:not(.btn-icon) { display: none; }
+
+    /* garante que o hamburger sempre aparece */
+    .hamburger {
+        display: inline-flex !important;
+        flex-direction: column !important;
+        gap: 4px !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    .hamburger span {
+        display: block !important;
+        width: 18px !important;
+        height: 2px !important;
+        background: var(--text2) !important;
+        border-radius: 2px !important;
+    }
 
     .layout { grid-template-columns: 1fr; }
     .sidebar { position: static; }
@@ -914,4 +941,4 @@ body {
     .platform-picker { grid-template-columns: 1fr; }
     #output-content { padding: 16px; font-size: 11px; }
     .field-textarea { min-height: 90px; }
-    }
+}
