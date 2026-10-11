@@ -51,13 +51,13 @@ const NON_REMOTE_NAMES = new Set([
     "mousedown","mouseup","mousemove","mousebutton1","mousebutton2",
 ]);
 
-// ═══════════ FEATURES DISPONÍVEIS ═══════════
 const FEATURES = [
     { key: "aimbot",      regex: /aim\s*bot|aimbot|mira\s*auto|aim\s*assist/i,           label: "Aimbot",           cat: "combat" },
-    { key: "esp",         regex: /esp|wallhack|chams|ver\s*players|see\s*players|box/i,  label: "ESP",              cat: "visual" },
-    { key: "speed",       regex: /speed|velocidade|correr\s*r[áa]pido|walkspeed/i,        label: "Speed",            cat: "movement" },
+    { key: "silentaim",   regex: /silent\s*aim|silent\s*aimbot/i,                          label: "Silent Aim",       cat: "combat" },
+    { key: "esp",         regex: /esp|wallhack|chams|ver\s*players|see\s*players|box/i,    label: "ESP",              cat: "visual" },
+    { key: "speed",       regex: /speed|velocidade|correr\s*r[áa]pido|walkspeed/i,         label: "Speed",            cat: "movement" },
     { key: "jump",        regex: /jump|pulo\b|jump\s*boost/i,                              label: "Jump Boost",       cat: "movement" },
-    { key: "infjump",     regex: /infinite\s*jump|pulo\s*infinito|inf\s*jump/i,           label: "Pulo Infinito",    cat: "movement" },
+    { key: "infjump",     regex: /infinite\s*jump|pulo\s*infinito|inf\s*jump/i,            label: "Pulo Infinito",    cat: "movement" },
     { key: "fly",         regex: /fly|voar|flight/i,                                       label: "Fly",              cat: "movement" },
     { key: "noclip",      regex: /noclip|atravessar|no\s*clip/i,                           label: "Noclip",           cat: "movement" },
     { key: "godmode",     regex: /god\s*mode|godmode|imortal|invulner|invenc/i,            label: "Godmode",          cat: "defense" },
@@ -70,12 +70,16 @@ const FEATURES = [
     { key: "rejoin",      regex: /rejoin|reconectar|relogar/i,                             label: "Rejoin",           cat: "util" },
     { key: "invisible",   regex: /invis[íi]vel|invisible/i,                                label: "Invisibilidade",   cat: "defense" },
     { key: "hitbox",      regex: /hitbox|expand\s*hitbox|alcance/i,                        label: "Hitbox Expander",  cat: "combat" },
+    { key: "killaura",    regex: /kill\s*aura|aura\s*kill|aura/i,                          label: "Kill Aura",        cat: "combat" },
+    { key: "norecoil",    regex: /no\s*recoil|sem\s*recuo/i,                               label: "No Recoil",        cat: "combat" },
+    { key: "antifling",   regex: /anti[\s-]?fling|anti[\s-]?arremess/i,                    label: "Anti-Fling",       cat: "defense" },
     { key: "spam",        regex: /spam|flood/i,                                            label: "Spam Remotes",     cat: "util" },
 ];
 
 // ═══════════ HELPERS ═══════════
 function set_status(text, kind) {
     const el = $("#status-text");
+    if (!el) return;
     el.textContent = text;
     el.style.color = kind === "ok"   ? "var(--success)"
                   : kind === "err"  ? "var(--danger)"
@@ -185,7 +189,6 @@ function parse_structured(text) {
 }
 
 function parse_lua_source(text) {
-    // WaitForChild / FindFirstChild
     for (const re of [/:WaitForChild\s*\(\s*["']([^"']+)["']/g, /:FindFirstChild\s*\(\s*["']([^"']+)["']/g]) {
         let m;
         while ((m = re.exec(text)) !== null) {
@@ -201,7 +204,6 @@ function parse_lua_source(text) {
         }
     }
 
-    // Instance.new
     const inst = /Instance\.new\s*\(\s*["']([^"']+)["']/g;
     let im;
     while ((im = inst.exec(text)) !== null) {
@@ -211,7 +213,6 @@ function parse_lua_source(text) {
         if (cls === "BindableEvent")   pushMap("bindables", "_Instance.new(BindableEvent)",  { parent: "script", kind: cls });
     }
 
-    // FireServer / FireClient / InvokeServer
     for (const { re, kind } of [
         { re: /([\w.\[\]"_'()]+)\s*:\s*FireServer\s*\(([^)]*)\)/g, kind: "FireServer" },
         { re: /([\w.\[\]"_'()]+)\s*:\s*FireClient\s*\(([^)]*)\)/g, kind: "FireClient" },
@@ -234,7 +235,6 @@ function parse_lua_source(text) {
         }
     }
 
-    // Connect
     const connect = /([\w.\[\]"_'()]+)\s*\.\s*(OnClientEvent|OnServerEvent)\s*:\s*Connect\s*\(\s*function\s*\(([^)]*)\)/g;
     let cm;
     while ((cm = connect.exec(text)) !== null) {
@@ -313,7 +313,6 @@ function detect_executor(text) {
 // ═══════════ SUGESTÕES ═══════════
 function build_suggestions() {
     const out = [];
-
     const totalRemotes = state.remotes.size + state.functions.size;
     out.push({
         title: "📊 Visão geral",
@@ -360,7 +359,6 @@ function build_suggestions() {
             ].join("<br>"),
         });
     }
-
     return out;
 }
 
@@ -546,7 +544,6 @@ function apply_important_mode() {
 }
 
 // ═══════════ GERADORES ═══════════
-
 function getRealRemotes() {
     return Array.from(new Set([...state.remotes.keys(), ...state.firecalls.keys()]))
         .filter(n => {
@@ -561,7 +558,6 @@ function generate_skeleton() {
     if (!state.raw) { set_status("Analisa um dump primeiro", "err"); return; }
     const realRemotes = getRealRemotes();
     const L = [];
-
     L.push(`--[[`);
     L.push(`    LC10 • Esqueleto gerado`);
     L.push(`    Jogo: ${state.game?.name || "?"}`);
@@ -574,7 +570,6 @@ function generate_skeleton() {
     L.push("");
     L.push("-- ═══ REMOTES ═══");
     for (const name of realRemotes.slice(0, 30)) {
-        const info = state.remotes.get(name);
         const args = state.firecalls.get(name)?.args;
         const note = args && args.size > 0 ? ` -- args: ${Array.from(args)[0].slice(0, 60)}` : "";
         L.push(`local ${sanitize(name)} = RS:FindFirstChild("${name}") or WS:FindFirstChild("${name}")${note}`);
@@ -588,7 +583,6 @@ function generate_sniffer() {
     if (!state.raw) { set_status("Analisa um dump primeiro", "err"); return; }
     const remotes = getRealRemotes();
     const L = [];
-
     L.push(`--[[`);
     L.push(`    LC10 • Sniffer`);
     L.push(`    Jogo: ${state.game?.name || "?"}`);
@@ -656,10 +650,10 @@ function generate_sniffer() {
     return L.join("\n");
 }
 
-// ═══════════ SCRIPT COMPLETO (com prompt + plataforma) ═══════════
+// ═══════════ SCRIPT COMPLETO ═══════════
 function parsePromptFeatures(prompt) {
     const found = [];
-    const lower = prompt.toLowerCase();
+    const lower = (prompt || "").toLowerCase();
     for (const f of FEATURES) {
         if (f.regex.test(lower)) found.push(f);
     }
@@ -674,7 +668,6 @@ function generate_custom_script(prompt, platform) {
     const gameName = state.game?.name || "Jogo";
     const isMobile = platform === "mobile";
 
-    // categoriza remotes do dump
     const attackRemotes = realRemotes.filter(n => /attack|hit|damage|combat|swing|shoot|punch|slash|melee|kill/i.test(n));
     const stateRemotes  = realRemotes.filter(n => /status|state|captur|stun|freeze|prison|jail|arrest/i.test(n));
     const detectRemotes = realRemotes.filter(n => /detect|ban|kick|report|alert|flag|watch/i.test(n));
@@ -683,7 +676,6 @@ function generate_custom_script(prompt, platform) {
     const L = [];
     const dateStr = new Date().toLocaleDateString("pt-BR");
 
-    // ─── HEADER
     L.push(`--[[`);
     L.push(`    ════════════════════════════════════════════════════════════`);
     L.push(`    LC10 • Script Gerado Automaticamente`);
@@ -698,7 +690,6 @@ function generate_custom_script(prompt, platform) {
     L.push(`]]`);
     L.push("");
 
-    // ─── SERVICES
     L.push("-- ═══ SERVICES ═══");
     L.push(`local Players = game:GetService("Players")`);
     L.push(`local RunService = game:GetService("RunService")`);
@@ -712,7 +703,6 @@ function generate_custom_script(prompt, platform) {
     L.push(`local LP = Players.LocalPlayer`);
     L.push("");
 
-    // ─── CONFIG
     L.push("-- ═══ CONFIG ═══");
     L.push(`local Config = {`);
     L.push(`    brand = "LC10",`);
@@ -720,9 +710,7 @@ function generate_custom_script(prompt, platform) {
     L.push(`    game = "${gameName.replace(/"/g, '\\"')}",`);
     L.push(`    platform = "${platform}",`);
     L.push(`    isMobile = ${isMobile},`);
-    L.push(isMobile
-        ? `    keybind = nil, -- mobile não usa keybind`
-        : `    keybind = Enum.KeyCode.RightShift,`);
+    L.push(isMobile ? `    keybind = nil, -- mobile não usa keybind` : `    keybind = Enum.KeyCode.RightShift,`);
     L.push(`}`);
     L.push("");
 
@@ -745,7 +733,6 @@ function generate_custom_script(prompt, platform) {
     L.push(`local F = { heading = Enum.Font.GothamBold, body = Enum.Font.Gotham, mono = Enum.Font.Code }`);
     L.push("");
 
-    // ─── REMOTES
     if (realRemotes.length > 0) {
         L.push("-- ═══ REMOTES (do dump) ═══");
         for (const name of realRemotes.slice(0, 25)) {
@@ -754,14 +741,12 @@ function generate_custom_script(prompt, platform) {
         L.push("");
     }
 
-    // ─── MÓDULOS DE FEATURES
+    // módulos
     const featureModules = [];
 
-    // ESP
     if (requested.some(f => f.key === "esp") || requested.length === 0) {
         featureModules.push({
-            name: "ESP",
-            cat: "Visual",
+            name: "ESP", cat: "Visual",
             code: [
                 `local ESP = { active = false, folder = nil }`,
                 `function ESP.enable()`,
@@ -787,41 +772,39 @@ function generate_custom_script(prompt, platform) {
         });
     }
 
-    // Aimbot
-    if (requested.some(f => f.key === "aimbot")) {
+    if (requested.some(f => f.key === "aimbot" || f.key === "silentaim")) {
         featureModules.push({
-            name: "Aimbot",
-            cat: "Combat",
+            name: "Aimbot", cat: "Combat",
             code: [
                 `local Aimbot = { active = false, smoothness = 0.15, range = 300 }`,
-                `function Aimbot.loop()`,
-                `    RunService.RenderStepped:Connect(function()`);
-                L.push(`        -- Aimbot: usa Camera do player pra mirar no mais próximo`);
-                L.push(`    end)`);
-                L.push(`end`);
-                L.push(`function Aimbot.getTarget()`);
-                L.push(`    local cam = WS.CurrentCamera`);
-                L.push(`    local closest, dist = nil, Aimbot.range`);
-                L.push(`    for _, p in ipairs(Players:GetPlayers()) do`);
-                L.push(`        if p ~= LP and p.Character then`);
-                L.push(`            local head = p.Character:FindFirstChild("Head")`);
-                L.push(`            if head then`);
-                L.push(`                local d = (cam.CFrame.Position - head.Position).Magnitude`);
-                L.push(`                if d < dist then closest, dist = head, d end`);
-                L.push(`            end`);
-                L.push(`        end`);
-                L.push(`    end`);
-                L.push(`    return closest`);
-                L.push(`end`);
+                `function Aimbot.getTarget()`,
+                `    local cam = WS.CurrentCamera`,
+                `    local closest, dist = nil, Aimbot.range`,
+                `    for _, p in ipairs(Players:GetPlayers()) do`,
+                `        if p ~= LP and p.Character then`,
+                `            local head = p.Character:FindFirstChild("Head")`,
+                `            if head then`,
+                `                local d = (cam.CFrame.Position - head.Position).Magnitude`,
+                `                if d < dist then closest, dist = head, d end`,
+                `            end`,
+                `        end`,
+                `    end`,
+                `    return closest`,
+                `end`,
+                `RunService.RenderStepped:Connect(function()`,
+                `    if not Aimbot.active then return end`,
+                `    local t = Aimbot.getTarget()`,
+                `    if t and WS.CurrentCamera then`,
+                `        WS.CurrentCamera.CFrame = CFrame.new(WS.CurrentCamera.CFrame.Position, t.Position)`,
+                `    end`,
+                `end)`,
             ],
         });
     }
 
-    // Speed / Jump / Movement
     if (requested.some(f => ["speed","jump","infjump","fly","noclip"].includes(f.key)) || moveRemotes.length > 0) {
         featureModules.push({
-            name: "Movement",
-            cat: "Movement",
+            name: "Movement", cat: "Movement",
             code: [
                 `local Movement = { speed = false, jump = false, infJump = false, fly = false, noclip = false, speedValue = 32, jumpValue = 100 }`,
                 `RunService.Heartbeat:Connect(function()`,
@@ -846,11 +829,9 @@ function generate_custom_script(prompt, platform) {
         });
     }
 
-    // Godmode
     if (requested.some(f => f.key === "godmode")) {
         featureModules.push({
-            name: "Godmode",
-            cat: "Defense",
+            name: "Godmode", cat: "Defense",
             code: [
                 `local Godmode = { active = false }`,
                 `RunService.Heartbeat:Connect(function()`,
@@ -862,11 +843,9 @@ function generate_custom_script(prompt, platform) {
         });
     }
 
-    // Fullbright
     if (requested.some(f => f.key === "fullbright")) {
         featureModules.push({
-            name: "Fullbright",
-            cat: "Visual",
+            name: "Fullbright", cat: "Visual",
             code: [
                 `local Fullbright = { active = false, prev = {} }`,
                 `function Fullbright.enable()`,
@@ -886,11 +865,9 @@ function generate_custom_script(prompt, platform) {
         });
     }
 
-    // Anti-Detect
     if (requested.some(f => f.key === "antidet") && detectRemotes.length > 0) {
         featureModules.push({
-            name: "Anti-Detect",
-            cat: "Defense",
+            name: "Anti-Detect", cat: "Defense",
             code: [
                 `local AntiDetect = { active = false }`,
                 `function AntiDetect.install()`,
@@ -907,11 +884,9 @@ function generate_custom_script(prompt, platform) {
         });
     }
 
-    // Anti-State
     if (requested.some(f => f.key === "antistate") && stateRemotes.length > 0) {
         featureModules.push({
-            name: "Anti-State",
-            cat: "Defense",
+            name: "Anti-State", cat: "Defense",
             code: [
                 `local AntiState = { active = false }`,
                 `function AntiState.install()`,
@@ -928,11 +903,9 @@ function generate_custom_script(prompt, platform) {
         });
     }
 
-    // Auto-Attack
-    if (requested.some(f => f.key === "autoatk") && attackRemotes.length > 0) {
+    if (requested.some(f => f.key === "autoatk" || f.key === "killaura") && attackRemotes.length > 0) {
         featureModules.push({
-            name: "Auto-Attack",
-            cat: "Combat",
+            name: "Auto-Attack", cat: "Combat",
             code: [
                 `local AutoAttack = { active = false, last = 0, cooldown = 0.8, range = 15 }`,
                 `RunService.Heartbeat:Connect(function()`,
@@ -959,11 +932,9 @@ function generate_custom_script(prompt, platform) {
         });
     }
 
-    // Teleport
     if (requested.some(f => f.key === "teleport")) {
         featureModules.push({
-            name: "Teleport",
-            cat: "Movement",
+            name: "Teleport", cat: "Movement",
             code: [
                 `local Teleport = { active = false }`,
                 `function Teleport.toPlayer(name)`,
@@ -979,11 +950,9 @@ function generate_custom_script(prompt, platform) {
         });
     }
 
-    // Stats
     if (requested.some(f => f.key === "stats")) {
         featureModules.push({
-            name: "Stats",
-            cat: "Info",
+            name: "Stats", cat: "Info",
             code: [
                 `local Stats = { active = false, gui = nil }`,
                 `function Stats.enable()`,
@@ -1001,10 +970,7 @@ function generate_custom_script(prompt, platform) {
                 `    Instance.new("UICorner", lbl).CornerRadius = UDim.new(0, 6)`,
                 `    task.spawn(function()`,
                 `        while Stats.gui and Stats.gui.Parent do`,
-                `            lbl.Text = string.format(" FPS: %d\\n Ping: %d ms\\n Players: %d",`,
-                `                math.floor(1/RunService.RenderStepped:Wait()),`,
-                `                math.floor(LP:GetNetworkPing() * 1000),`,
-                `                #Players:GetPlayers())`,
+                `            lbl.Text = string.format(" FPS: %d\\n Players: %d", math.floor(1/RunService.RenderStepped:Wait()), #Players:GetPlayers())`,
                 `        end`,
                 `    end)`,
                 `end`,
@@ -1015,11 +981,9 @@ function generate_custom_script(prompt, platform) {
         });
     }
 
-    // Rejoin
     if (requested.some(f => f.key === "rejoin")) {
         featureModules.push({
-            name: "Rejoin",
-            cat: "Util",
+            name: "Rejoin", cat: "Util",
             code: [
                 `local function doRejoin()`,
                 `    pcall(function()`,
@@ -1030,10 +994,7 @@ function generate_custom_script(prompt, platform) {
         });
     }
 
-    // Se pediram "gui" ou "painel" ou nada foi pedido, força o módulo de UI
-    const wantsGui = requested.some(f => f.key === "gui") || requested.length === 0 || true;
-
-    // ─── UI SYSTEM
+    // ─── UI
     L.push("-- ═══ UI SYSTEM ═══");
     L.push(`local gui = Instance.new("ScreenGui")`);
     L.push(`gui.Name = "LC10_" .. Config.brand`);
@@ -1056,7 +1017,6 @@ function generate_custom_script(prompt, platform) {
     L.push(`winStroke.Color = Theme.border`);
     L.push(`winStroke.Thickness = 1`);
     L.push("");
-    L.push(`-- header`);
     L.push(`local header = Instance.new("Frame", win)`);
     L.push(`header.Size = UDim2.new(1, 0, 0, ${isMobile ? 46 : 42})`);
     L.push(`header.BackgroundColor3 = Theme.surface`);
@@ -1092,8 +1052,7 @@ function generate_custom_script(prompt, platform) {
     L.push(`closeBtn.MouseButton1Click:Connect(function() win.Visible = false end)`);
     L.push("");
 
-    // drag
-    L.push("-- drag universal (mouse + touch)");
+    L.push("-- drag universal");
     L.push(`do`);
     L.push(`    local dragging, dragStart, startPos`);
     L.push(`    header.InputBegan:Connect(function(i)`);
@@ -1113,8 +1072,6 @@ function generate_custom_script(prompt, platform) {
     L.push(`end`);
     L.push("");
 
-    // lista de toggles
-    L.push("-- lista de features");
     L.push(`local list = Instance.new("ScrollingFrame", win)`);
     L.push(`list.Size = UDim2.new(1, -24, 1, -${isMobile ? 70 : 66})`);
     L.push(`list.Position = UDim2.new(0, 12, 0, ${isMobile ? 56 : 52})`);
@@ -1128,7 +1085,6 @@ function generate_custom_script(prompt, platform) {
     L.push(`ll.Padding = UDim.new(0, ${isMobile ? 8 : 6})`);
     L.push("");
 
-    // função toggle (tamanhos maiores no mobile)
     L.push(`local function mkToggle(label, callback, default)`);
     L.push(`    default = default or false`);
     L.push(`    local row = Instance.new("Frame", list)`);
@@ -1168,9 +1124,8 @@ function generate_custom_script(prompt, platform) {
     L.push(`end`);
     L.push("");
 
-    // ─── MOBILE floating button
     if (isMobile) {
-        L.push("-- ═══ BOTÃO FLUTUANTE (mobile) ═══");
+        L.push("-- BOTÃO FLUTUANTE (mobile)");
         L.push(`local float = Instance.new("TextButton", gui)`);
         L.push(`float.Size = UDim2.new(0, 60, 0, 60)`);
         L.push(`float.Position = UDim2.new(0, 16, 0.5, -30)`);
@@ -1187,18 +1142,16 @@ function generate_custom_script(prompt, platform) {
         L.push(`fs.Color = Theme.accent`);
         L.push(`fs.Thickness = 1.5`);
         L.push(`float.MouseButton1Click:Connect(function() win.Visible = not win.Visible end)`);
-        L.push(`-- drag do botão flutuante`);
         L.push(`do`);
-        L.push(`    local dragging, dragStart, startPos, moved`);
+        L.push(`    local dragging, dragStart, startPos`);
         L.push(`    float.InputBegan:Connect(function(i)`);
         L.push(`        if i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseButton1 then`);
-        L.push(`            dragging = true; moved = false; dragStart = i.Position; startPos = float.Position`);
+        L.push(`            dragging = true; dragStart = i.Position; startPos = float.Position`);
         L.push(`        end`);
         L.push(`    end)`);
         L.push(`    UserInput.InputChanged:Connect(function(i)`);
         L.push(`        if dragging and (i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseMovement) then`);
         L.push(`            local d = i.Position - dragStart`);
-        L.push(`            if d.Magnitude > 5 then moved = true end`);
         L.push(`            float.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)`);
         L.push(`        end`);
         L.push(`    end)`);
@@ -1210,7 +1163,7 @@ function generate_custom_script(prompt, platform) {
         L.push(`end`);
         L.push("");
     } else {
-        L.push("-- ═══ KEYBIND (PC) ═══");
+        L.push("-- KEYBIND (PC)");
         L.push(`UserInput.InputBegan:Connect(function(i, gp)`);
         L.push(`    if gp then return end`);
         L.push(`    if i.KeyCode == Config.keybind then win.Visible = not win.Visible end`);
@@ -1218,7 +1171,6 @@ function generate_custom_script(prompt, platform) {
         L.push("");
     }
 
-    // ─── INSERE MÓDULOS
     if (featureModules.length > 0) {
         L.push("-- ═══ MÓDULOS ═══");
         for (const mod of featureModules) {
@@ -1228,28 +1180,21 @@ function generate_custom_script(prompt, platform) {
         }
     }
 
-    // ─── INSTALL CALLS
     L.push("-- ═══ INSTALA ═══");
     if (featureModules.find(m => m.name === "Anti-Detect")) L.push(`if AntiDetect and AntiDetect.install then AntiDetect.install() end`);
     if (featureModules.find(m => m.name === "Anti-State"))  L.push(`if AntiState and AntiState.install then AntiState.install() end`);
-    if (featureModules.find(m => m.name === "Aimbot"))      L.push(`if Aimbot and Aimbot.loop then Aimbot.loop() end`);
     L.push("");
 
-    // ─── TOGGLES NA UI
     L.push("-- ═══ TOGGLES ═══");
     const toggleCalls = [];
     if (featureModules.find(m => m.name === "Aimbot"))       toggleCalls.push(`mkToggle("Aimbot", function(v) Aimbot.active = v end)`);
     if (featureModules.find(m => m.name === "ESP"))          toggleCalls.push(`mkToggle("ESP", function(v) if v then ESP.enable() else ESP.disable() end end)`);
     if (featureModules.find(m => m.name === "Movement")) {
         const mvReq = requested.filter(f => ["speed","jump","infjump","noclip"].includes(f.key));
-        if (mvReq.some(f => f.key === "speed") || mvReq.length === 0)
-            toggleCalls.push(`mkToggle("Speed Hack", function(v) Movement.speed = v end)`);
-        if (mvReq.some(f => f.key === "jump") || mvReq.length === 0)
-            toggleCalls.push(`mkToggle("Jump Boost", function(v) Movement.jump = v end)`);
-        if (mvReq.some(f => f.key === "infjump"))
-            toggleCalls.push(`mkToggle("Pulo Infinito", function(v) Movement.infJump = v end)`);
-        if (mvReq.some(f => f.key === "noclip"))
-            toggleCalls.push(`mkToggle("Noclip", function(v) Movement.noclip = v end)`);
+        if (mvReq.some(f => f.key === "speed") || mvReq.length === 0) toggleCalls.push(`mkToggle("Speed Hack", function(v) Movement.speed = v end)`);
+        if (mvReq.some(f => f.key === "jump") || mvReq.length === 0)  toggleCalls.push(`mkToggle("Jump Boost", function(v) Movement.jump = v end)`);
+        if (mvReq.some(f => f.key === "infjump"))                     toggleCalls.push(`mkToggle("Pulo Infinito", function(v) Movement.infJump = v end)`);
+        if (mvReq.some(f => f.key === "noclip"))                      toggleCalls.push(`mkToggle("Noclip", function(v) Movement.noclip = v end)`);
     }
     if (featureModules.find(m => m.name === "Godmode"))      toggleCalls.push(`mkToggle("Godmode", function(v) Godmode.active = v end)`);
     if (featureModules.find(m => m.name === "Fullbright"))   toggleCalls.push(`mkToggle("Fullbright", function(v) if v then Fullbright.enable() else Fullbright.disable() end end)`);
@@ -1257,6 +1202,7 @@ function generate_custom_script(prompt, platform) {
     if (featureModules.find(m => m.name === "Anti-State"))   toggleCalls.push(`mkToggle("Anti-State", function(v) AntiState.active = v end)`);
     if (featureModules.find(m => m.name === "Auto-Attack"))  toggleCalls.push(`mkToggle("Auto-Attack", function(v) AutoAttack.active = v end)`);
     if (featureModules.find(m => m.name === "Stats"))        toggleCalls.push(`mkToggle("Stats", function(v) if v then Stats.enable() else Stats.disable() end end)`);
+    if (featureModules.find(m => m.name === "Rejoin"))       toggleCalls.push(`mkToggle("Rejoin (toggle)", function(v) if v then doRejoin() end end)`);
 
     if (toggleCalls.length === 0) {
         toggleCalls.push(`mkToggle("Painel LC10", function(v) print("[LC10] toggle:", v) end)`);
@@ -1264,7 +1210,6 @@ function generate_custom_script(prompt, platform) {
     for (const t of toggleCalls) L.push(t);
     L.push("");
 
-    // teleport input
     if (featureModules.find(m => m.name === "Teleport")) {
         L.push("-- teleport input");
         L.push(`local tpBox = Instance.new("TextBox", list)`);
@@ -1282,7 +1227,6 @@ function generate_custom_script(prompt, platform) {
         L.push("");
     }
 
-    // ─── PRINT FINAL
     L.push(`print("[LC10] " .. Config.brand .. " carregado — " .. Config.game .. " (" .. Config.platform .. ")")`);
     L.push(`print("[LC10] remotes detectados: ${realRemotes.length}")`);
     L.push(`print("[LC10] features: ${featureModules.length}")`);
@@ -1351,7 +1295,7 @@ function download_text(filename, content) {
     URL.revokeObjectURL(url);
 }
 
-// ═══════════ MODAL ═══════════
+// ═══════════ MODAIS ═══════════
 function open_output_modal(title, content, sub = "") {
     state.lastOutput = content;
     $("#output-title").textContent = title;
@@ -1380,9 +1324,7 @@ function close_menu() {
 function run_parse() {
     const text = $("#dump-input").value;
     if (!text.trim()) { set_status("Cola o dump primeiro", "err"); return; }
-
     set_status("Analisando " + (text.length / 1024).toFixed(0) + " KB...", "warn");
-
     setTimeout(() => {
         reset_state();
         parse_text(text);
@@ -1402,14 +1344,13 @@ function update_stats() {
 }
 
 async function load_files(files) {
-    let combined = $("#dump-input").value;
+    let combined = $("#dump-input").value || "";
     for (const f of files) {
         try { combined += (combined ? "\n\n" : "") + await f.text(); }
-        catch (e) { console.warn(e); }
+        catch (e) { console.warn("erro lendo", f.name, e); }
     }
     $("#dump-input").value = combined;
     update_stats();
-    set_status(`${files.length} arquivo(s) carregado(s)`, "ok");
 }
 
 // ═══════════ BIND ═══════════
@@ -1429,19 +1370,52 @@ $("#clear-btn").addEventListener("click", () => {
 
 $("#dump-input").addEventListener("input", update_stats);
 
-$("#file-input").addEventListener("change", (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length > 0) load_files(files);
-    e.target.value = "";
-});
+// botão carregar arquivo
+const fileBtn = document.getElementById("file-btn");
+const fileInput = document.getElementById("file-input");
+
+if (fileBtn && fileInput) {
+    fileBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        fileInput.click();
+    });
+
+    fileInput.addEventListener("change", async (e) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+        set_status(`Lendo ${files.length} arquivo(s)...`, "warn");
+        let combined = $("#dump-input").value || "";
+        let total_size = 0;
+        for (const f of files) {
+            try {
+                const txt = await f.text();
+                combined += (combined ? "\n\n" : "") + txt;
+                total_size += txt.length;
+            } catch (err) {
+                console.warn("erro lendo", f.name, err);
+            }
+        }
+        $("#dump-input").value = combined;
+        update_stats();
+        set_status(`${files.length} arquivo(s) carregado(s) — ${(total_size/1024).toFixed(1)} KB`, "ok");
+        e.target.value = "";
+    });
+}
 
 // menu
-$("#menu-btn").addEventListener("click", (e) => { e.stopPropagation(); toggle_menu(); });
+const menuBtn = $("#menu-btn");
+if (menuBtn) {
+    menuBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggle_menu();
+    });
+}
+
 document.addEventListener("click", (e) => {
     if (!e.target.closest("#menu-dropdown") && !e.target.closest("#menu-btn")) close_menu();
 });
 
-// menu actions
 $$(".menu-item").forEach(btn => {
     btn.addEventListener("click", () => {
         const action = btn.dataset.action;
@@ -1463,19 +1437,18 @@ $$(".menu-item").forEach(btn => {
             return;
         }
         if (action === "skeleton") {
+            if (!state.raw) { set_status("Analisa um dump primeiro", "err"); return; }
             const code = generate_skeleton();
             open_output_modal("🧩 Esqueleto Lua", code, "Estrutura pronta pra preencher");
             return;
         }
         if (action === "sniffer") {
+            if (!state.raw) { set_status("Analisa um dump primeiro", "err"); return; }
             const code = generate_sniffer();
             open_output_modal("📡 Sniffer", code, "Cola no executor e roda no jogo");
             return;
         }
-        if (action === "fullscript") {
-            open_config_modal();
-            return;
-        }
+        if (action === "fullscript") { open_config_modal(); return; }
         if (action === "export-txt") {
             if (!state.raw) { set_status("Analisa um dump primeiro", "err"); return; }
             download_text("lc10-analysis.txt", build_report_text("txt"));
@@ -1508,14 +1481,13 @@ $("#filter-clear").addEventListener("click", () => {
     apply_filter();
 });
 
-// config modal — sugestões
+// config modal
 $$(".sug-chip").forEach(chip => {
     chip.addEventListener("click", () => {
         $("#prompt-input").value = chip.dataset.sug;
     });
 });
 
-// config modal — plataforma
 $$(".platform-option").forEach(opt => {
     opt.addEventListener("click", () => {
         $$(".platform-option").forEach(o => o.classList.remove("selected"));
@@ -1524,33 +1496,27 @@ $$(".platform-option").forEach(opt => {
     });
 });
 
-// botão gerar
 $("#generate-btn").addEventListener("click", () => {
     const prompt = $("#prompt-input").value.trim();
     if (!state.platform) {
         set_status("Escolhe Mobile ou PC", "err");
         return;
     }
-
     set_status("Gerando script...", "warn");
-
     setTimeout(() => {
         const code = generate_custom_script(prompt, state.platform);
         if (!code) {
             set_status("Falha na geração — verifica se o dump tem remotes", "err");
             return;
         }
-
         const features = parsePromptFeatures(prompt);
         const sub = `${state.platform === "mobile" ? "📱 Mobile" : "🖥️ PC"} • ${features.length} features`;
-
         $("#config-modal").classList.add("hidden");
-        open_output_modal(`⚡ Script gerado`, code, sub);
+        open_output_modal("⚡ Script gerado", code, sub);
         set_status("Script gerado com sucesso", "ok");
     }, 60);
 });
 
-// output modal
 $("#output-copy").addEventListener("click", async () => {
     try {
         await navigator.clipboard.writeText(state.lastOutput);
@@ -1594,7 +1560,6 @@ $("#dump-input").addEventListener("drop", (e) => {
     if (files.length > 0) load_files(files);
 });
 
-// ESC fecha modais
 document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
         $("#config-modal").classList.add("hidden");
@@ -1604,4 +1569,5 @@ document.addEventListener("keydown", (e) => {
 });
 
 // mobile default
-document.querySelector('.platform-option[data-platform="mobile"]').classList.add("selected");
+const mobileOpt = document.querySelector('.platform-option[data-platform="mobile"]');
+if (mobileOpt) mobileOpt.classList.add("selected");
