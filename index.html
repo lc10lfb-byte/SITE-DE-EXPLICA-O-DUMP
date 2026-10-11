@@ -145,13 +145,13 @@ O analisador detecta os padrões sozinho."></textarea>
 
 </div>
 
-<!-- ═══════════ CONFIG MODAL (script completo) ═══════════ -->
+<!-- ═══════════ CONFIG MODAL ═══════════ -->
 <div id="config-modal" class="modal hidden">
     <div class="modal-box">
         <div class="modal-head">
             <div>
                 <h2 id="config-title">⚡ Gerar Script</h2>
-                <span class="modal-sub" id="config-sub">Configura o script que tu quer</span>
+                <span class="modal-sub">Configura o script que tu quer</span>
             </div>
             <button class="modal-close" type="button" onclick="document.getElementById('config-modal').classList.add('hidden')">×</button>
         </div>
@@ -162,17 +162,18 @@ O analisador detecta os padrões sozinho."></textarea>
             <textarea id="prompt-input" class="field-textarea" placeholder="Digite as funções separadas por vírgula.
 
 Exemplo:
-painel gui, aimbot, esp, speed, jump, teleport, anti-detect"></textarea>
+painel gui com abas, aimbot, esp, speed, fly"></textarea>
 
             <div class="field-suggestions">
-                <span class="sug-label">Sugestões rápidas:</span>
-                <button class="sug-chip" type="button" data-sug="painel gui, esp, aimbot">🎯 FPS Pack</button>
-                <button class="sug-chip" type="button" data-sug="painel gui, speed, jump, fly, noclip">🏃 Movement Pack</button>
-                <button class="sug-chip" type="button" data-sug="painel gui, anti-detect, anti-state, godmode">🛡️ Stealth Pack</button>
-                <button class="sug-chip" type="button" data-sug="painel gui, esp, stats, fullbright">👁️ Visual Pack</button>
+                <span class="sug-label">Sugestões:</span>
+                <button class="sug-chip" type="button" data-sug="painel gui com abas, aimbot, esp">🎯 FPS Pack</button>
+                <button class="sug-chip" type="button" data-sug="painel gui com abas, speed, jump, fly, noclip">🏃 Movement Pack</button>
+                <button class="sug-chip" type="button" data-sug="painel gui com abas, anti-detect, godmode, invisible">🛡️ Stealth Pack</button>
+                <button class="sug-chip" type="button" data-sug="painel gui com abas, esp, box esp, skeleton esp, name esp, health esp">👁️ Visual Pack</button>
+                <button class="sug-chip" type="button" data-sug="painel gui com abas, silent aim, kill aura, hitbox expander, auto parry">⚔️ Combat Pack</button>
             </div>
 
-            <label class="field-label">Suporte</label>
+            <label class="field-label">Suporte (plataforma)</label>
             <div class="platform-picker">
                 <button class="platform-option" type="button" data-platform="mobile">
                     <span class="plat-icon">📱</span>
@@ -187,6 +188,34 @@ painel gui, aimbot, esp, speed, jump, teleport, anti-detect"></textarea>
                     <div class="plat-text">
                         <strong>PC</strong>
                         <small>Mouse/teclado · hotkeys · compacto</small>
+                    </div>
+                    <span class="plat-check">✓</span>
+                </button>
+            </div>
+
+            <label class="field-label" style="margin-top: 22px;">Estilo do painel</label>
+            <div class="platform-picker" style="grid-template-columns: 1fr 1fr 1fr;">
+                <button class="platform-option" type="button" data-tabstyle="list">
+                    <span class="plat-icon">📋</span>
+                    <div class="plat-text">
+                        <strong>Lista</strong>
+                        <small>Simples</small>
+                    </div>
+                    <span class="plat-check">✓</span>
+                </button>
+                <button class="platform-option" type="button" data-tabstyle="vertical">
+                    <span class="plat-icon">📑</span>
+                    <div class="plat-text">
+                        <strong>Verticais</strong>
+                        <small>Sidebar</small>
+                    </div>
+                    <span class="plat-check">✓</span>
+                </button>
+                <button class="platform-option" type="button" data-tabstyle="horizontal">
+                    <span class="plat-icon">🔝</span>
+                    <div class="plat-text">
+                        <strong>Horizontais</strong>
+                        <small>Topo</small>
                     </div>
                     <span class="plat-check">✓</span>
                 </button>
@@ -223,4 +252,4 @@ painel gui, aimbot, esp, speed, jump, teleport, anti-detect"></textarea>
 
 <script src="app.js"></script>
 </body>
-</html>
+                </html>
